@@ -87,12 +87,13 @@
     padding:6px 10px; border-radius:10px; white-space:nowrap;
   }
   .ex-input-row{display:flex; align-items:center; gap:10px; margin-top:10px;}
-  input[type=number], input[type=text]{
+  input[type=number], input[type=text], input[type=date]{
     background:var(--card-2); border:1px solid var(--border); color:var(--text);
     border-radius:12px; padding:12px 14px; font-size:16px; width:100%;
     -moz-appearance:textfield;
   }
   input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none; }
+  input[type=date]::-webkit-calendar-picker-indicator{ filter:invert(0.8); }
   .ex-diff{font-size:12.5px; font-weight:700; min-width:64px; text-align:right;}
   .ex-diff.pos{color:var(--success);}
   .ex-diff.neg{color:var(--danger);}
@@ -231,8 +232,11 @@ var EXERCISES = {
 
 var QUICK_PROTEIN = [10, 20, 30, 50];
 
+var BLOCK_LENGTH_DAYS = 168;
+
 function defaultState(){
   var t = todayISO();
+  var start = '2026-08-29';
   return {
     profile: {
       weightKg: 90.5,
@@ -242,9 +246,11 @@ function defaultState(){
       proteinPerKg: 2.2,
       waterGoalBottles: 5
     },
-    blockStart: '2026-08-29',
-    blockEnd: '2027-02-13',
+    blockStart: start,
+    blockEnd: addDays(start, BLOCK_LENGTH_DAYS),
     sessions: [],
+    measurements: [],
+    dailyLogs: {},
     water: { date: t, bottles: 0 },
     protein: { date: t, grams: 0, history: [] }
   };
@@ -280,6 +286,8 @@ function loadState(){
       blockStart: parsed.blockStart || def.blockStart,
       blockEnd: parsed.blockEnd || def.blockEnd,
       sessions: Array.isArray(parsed.sessions) ? parsed.sessions : [],
+      measurements: Array.isArray(parsed.measurements) ? parsed.measurements : [],
+      dailyLogs: (parsed.dailyLogs && typeof parsed.dailyLogs === 'object') ? parsed.dailyLogs : {},
       water: parsed.water || def.water,
       protein: parsed.protein || def.protein
     };
@@ -288,15 +296,35 @@ function loadState(){
   }
 }
 
+function syncTodayLog(){
+  var t = todayISO();
+  state.dailyLogs[t] = state.dailyLogs[t] || {};
+  state.dailyLogs[t].waterBottles = state.water.bottles;
+  state.dailyLogs[t].proteinGrams = state.protein.grams;
+}
+
 function saveState(){
+  syncTodayLog();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
 function normalizeDaily(){
   var t = todayISO();
   var changed = false;
-  if (state.water.date !== t){ state.water = { date: t, bottles: 0 }; changed = true; }
-  if (state.protein.date !== t){ state.protein = { date: t, grams: 0, history: [] }; changed = true; }
+  if (state.water.date !== t){
+    var oldWaterDate = state.water.date;
+    state.dailyLogs[oldWaterDate] = state.dailyLogs[oldWaterDate] || {};
+    state.dailyLogs[oldWaterDate].waterBottles = state.water.bottles;
+    state.water = { date: t, bottles: 0 };
+    changed = true;
+  }
+  if (state.protein.date !== t){
+    var oldProteinDate = state.protein.date;
+    state.dailyLogs[oldProteinDate] = state.dailyLogs[oldProteinDate] || {};
+    state.dailyLogs[oldProteinDate].proteinGrams = state.protein.grams;
+    state.protein = { date: t, grams: 0, history: [] };
+    changed = true;
+  }
   if (changed) saveState();
 }
 
@@ -324,6 +352,31 @@ function getPrevSessionForDay(dayType){
   return null;
 }
 
+function setBlockStart(newVal){
+  if (state.sessions.length > 0) return;
+  if (!newVal){ render(); return; }
+  var minDate = addDays(todayISO(), -3);
+  var maxDate = addDays(todayISO(), 90);
+  if (newVal < minDate || newVal > maxDate){
+    alert('Program başlangıç tarihi bugünden en fazla 3 gün önce veya en fazla 90 gün sonra olabilir.');
+    render();
+    return;
+  }
+  state.blockStart = newVal;
+  state.blockEnd = addDays(newVal, BLOCK_LENGTH_DAYS);
+  saveState();
+  render();
+}
+
+function undoLastSession(){
+  if (state.sessions.length === 0) return;
+  var last = state.sessions[state.sessions.length - 1];
+  if (!confirm('Son tamamlanan seansı (Gün ' + last.dayType + ' · ' + formatDateTR(last.date) + ') geri almak istiyor musun?')) return;
+  state.sessions.pop();
+  saveState();
+  render();
+}
+
 function unitLabel(u){
   if (u === 'kg') return 'kg';
   if (u === 'kg_arm') return 'kg/kol';
@@ -338,6 +391,51 @@ function ytLink(nameEn){
 
 function proteinTarget(){
   return Math.round(state.profile.weightKg * state.profile.proteinPerKg);
+}
+
+/* ---------- Vücut ölçüm geçmişi ---------- */
+
+function sortedMeasurements(){
+  return state.measurements.slice().sort(function(a, b){
+    return a.date < b.date ? -1 : (a.date > b.date ? 1 : 0);
+  });
+}
+
+function getLastTwoMeasurementsDiff(){
+  var sorted = sortedMeasurements();
+  if (sorted.length < 2) return null;
+  var last = sorted[sorted.length - 1];
+  var prev = sorted[sorted.length - 2];
+  var weightDiff = Math.round((last.weightKg - prev.weightKg) * 10) / 10;
+  var fatDiff = (last.bodyFatPct != null && prev.bodyFatPct != null)
+    ? Math.round((last.bodyFatPct - prev.bodyFatPct) * 10) / 10
+    : null;
+  return { weightDiff: weightDiff, fatDiff: fatDiff };
+}
+
+function saveMeasurement(){
+  var weight = parseFloat(document.getElementById('meas_weight').value);
+  var bodyfat = parseFloat(document.getElementById('meas_bodyfat').value);
+  var bodyage = parseFloat(document.getElementById('meas_bodyage').value);
+
+  if (isNaN(weight) || weight <= 0){
+    alert('Geçerli bir kilo girmelisin.');
+    return;
+  }
+
+  state.profile.weightKg = weight;
+  if (!isNaN(bodyfat) && bodyfat >= 0) state.profile.bodyFatPct = bodyfat;
+  if (!isNaN(bodyage) && bodyage > 0) state.profile.bodyAge = bodyage;
+
+  state.measurements.push({
+    date: todayISO(),
+    weightKg: weight,
+    bodyFatPct: isNaN(bodyfat) ? null : bodyfat,
+    bodyAge: isNaN(bodyage) ? null : bodyage
+  });
+
+  saveState();
+  render();
 }
 
 /* ---------- Sekme yönetimi ---------- */
@@ -384,6 +482,23 @@ function renderHeader(){
   }
 }
 
+function renderBlockStartCard(){
+  var locked = state.sessions.length > 0;
+  if (locked){
+    return '<div class="card">' +
+      '<div class="card-title">Program Başlangıcı</div>' +
+      '<div class="card-sub" style="margin-bottom:0;">Program başlangıcı: ' + formatDateTR(state.blockStart) + ' (kilitli — kayan takvim artık son tamamlanan seansa göre ilerliyor)</div>' +
+    '</div>';
+  }
+  var minDate = addDays(todayISO(), -3);
+  var maxDate = addDays(todayISO(), 90);
+  return '<div class="card">' +
+    '<div class="card-title">Program Başlangıç Tarihi</div>' +
+    '<div class="card-sub">Gün A bu tarihte planlanacak. İlk seansı tamamladıktan sonra bu alan kilitlenir.</div>' +
+    '<input type="date" id="blockStartInput" value="' + state.blockStart + '" min="' + minDate + '" max="' + maxDate + '" onchange="setBlockStart(this.value)">' +
+  '</div>';
+}
+
 function renderToday(){
   var next = getNextSession();
   var today = todayISO();
@@ -401,11 +516,21 @@ function renderToday(){
 
   var html = '';
 
+  if (state.sessions.length === 0){
+    html += renderBlockStartCard();
+  }
+
   if (isPhaseCheckWeek()){
+    var measDiff = getLastTwoMeasurementsDiff();
+    var measDiffText = '';
+    if (measDiff){
+      measDiffText = ' Son ölçümden bu yana: ' + (measDiff.weightDiff > 0 ? '+' : '') + measDiff.weightDiff + 'kg' +
+        (measDiff.fatDiff != null ? (', ' + (measDiff.fatDiff > 0 ? '+' : '') + measDiff.fatDiff + '% yağ') : '') + '.';
+    }
     html += '<div class="banner">' +
       '<b>🔔 Hafta 12 · Faz Geçiş Kontrolü</b>' +
       '<p>Recomp fazının sonuna yaklaştın. Vücut yağı, kilo ve fotoğraflarını güncelle. ' +
-      '13. haftadan itibaren otomatik olarak <b>Faz 2 – Lean Bulk</b> stratejisine geçilecek.</p>' +
+      '13. haftadan itibaren otomatik olarak <b>Faz 2 – Lean Bulk</b> stratejisine geçilecek.' + measDiffText + '</p>' +
       '</div>';
   }
 
@@ -444,6 +569,12 @@ function renderToday(){
 
   html += '<button class="btn-primary" onclick="completeSession(\'' + next.dayType + '\')">Seansı Tamamla ✓</button>';
   html += '</div>';
+
+  if (state.sessions.length > 0){
+    var lastSession = state.sessions[state.sessions.length - 1];
+    html += '<button class="btn-secondary" style="width:100%; margin-bottom:14px;" onclick="undoLastSession()">↩ Son Seansı Geri Al (Gün ' +
+      lastSession.dayType + ' · ' + formatDateTR(lastSession.date) + ')</button>';
+  }
 
   html += '<div class="card">' +
     '<div class="card-title">İlerleme</div>' +
@@ -606,34 +737,95 @@ function resetProtein(){
 }
 
 function renderHistory(){
-  if (state.sessions.length === 0){
-    return '<div class="card"><div class="empty">Henüz tamamlanmış seans yok.<br>İlk seansını "Bugün" sekmesinden tamamla.</div></div>';
+  var dateSet = {};
+  state.sessions.forEach(function(s){ dateSet[s.date] = true; });
+  Object.keys(state.dailyLogs).forEach(function(d){ dateSet[d] = true; });
+
+  var dates = Object.keys(dateSet).sort().reverse().filter(function(d){
+    var hasSession = state.sessions.some(function(s){ return s.date === d; });
+    var log = state.dailyLogs[d];
+    var hasLog = !!(log && (log.waterBottles || log.proteinGrams));
+    return hasSession || hasLog;
+  });
+
+  if (dates.length === 0){
+    return '<div class="card"><div class="empty">Henüz kayıt yok.<br>İlk seansını "Bugün" sekmesinden tamamla ya da su/protein ekle.</div></div>';
   }
-  var html = '<div class="card"><div class="card-title">Tamamlanan Seanslar</div>';
-  var reversed = state.sessions.slice().reverse();
-  reversed.forEach(function(s){
-    var info = DAY_INFO[s.dayType];
-    var exIds = Object.keys(s.exercises || {});
-    html += '<div class="hist-item">' +
-      '<div class="hist-date">' + formatDateTR(s.date) + '</div>' +
-      '<div class="hist-day">Gün ' + s.dayType + ' · ' + info.title + '</div>';
-    if (exIds.length === 0){
-      html += '<div class="hist-ex">Egzersiz kaydı girilmedi</div>';
-    } else {
-      var exDefs = EXERCISES[s.dayType];
-      html += '<div class="hist-ex">';
-      exIds.forEach(function(id, i){
-        var def = exDefs.filter(function(e){ return e.id === id; })[0];
-        var rec = s.exercises[id];
-        if (def){
-          html += '<b>' + def.name + ':</b> ' + rec.value + ' ' + unitLabel(rec.unit) + (i < exIds.length-1 ? ' &nbsp;·&nbsp; ' : '');
-        }
-      });
-      html += '</div>';
+
+  var html = '<div class="card"><div class="card-title">Geçmiş</div>';
+
+  if (state.sessions.length > 0){
+    var lastSession = state.sessions[state.sessions.length - 1];
+    html += '<button class="btn-secondary" style="width:100%; margin-bottom:14px;" onclick="undoLastSession()">↩ Son Seansı Geri Al (Gün ' +
+      lastSession.dayType + ' · ' + formatDateTR(lastSession.date) + ')</button>';
+  }
+
+  dates.forEach(function(d){
+    var sessionsForDate = state.sessions.filter(function(s){ return s.date === d; });
+    var log = state.dailyLogs[d];
+
+    html += '<div class="hist-item">' + '<div class="hist-date">' + formatDateTR(d) + '</div>';
+
+    sessionsForDate.forEach(function(s){
+      var info = DAY_INFO[s.dayType];
+      var exIds = Object.keys(s.exercises || {});
+      html += '<div class="hist-day">Gün ' + s.dayType + ' · ' + info.title + '</div>';
+      if (exIds.length === 0){
+        html += '<div class="hist-ex">Egzersiz kaydı girilmedi</div>';
+      } else {
+        var exDefs = EXERCISES[s.dayType];
+        html += '<div class="hist-ex">';
+        exIds.forEach(function(id, i){
+          var def = exDefs.filter(function(e){ return e.id === id; })[0];
+          var rec = s.exercises[id];
+          if (def){
+            html += '<b>' + def.name + ':</b> ' + rec.value + ' ' + unitLabel(rec.unit) + (i < exIds.length-1 ? ' &nbsp;·&nbsp; ' : '');
+          }
+        });
+        html += '</div>';
+      }
+    });
+
+    if (log && (log.waterBottles || log.proteinGrams)){
+      var parts = [];
+      if (log.waterBottles){ parts.push('💧 ' + log.waterBottles + ' şişe (' + (log.waterBottles * 700) + 'ml)'); }
+      if (log.proteinGrams){ parts.push('🍗 ' + log.proteinGrams + 'g protein'); }
+      html += '<div class="hist-ex" style="margin-top:' + (sessionsForDate.length ? '8px' : '0') + ';">' + parts.join(' &nbsp;·&nbsp; ') + '</div>';
     }
+
     html += '</div>';
   });
+
   html += '</div>';
+  return html;
+}
+
+function renderMeasurementList(){
+  if (state.measurements.length === 0){
+    return '<div class="small-muted">Henüz ölçüm kaydı yok.</div>';
+  }
+  var sorted = sortedMeasurements();
+  var last5 = sorted.slice(-5).reverse();
+  var html = '';
+  last5.forEach(function(m){
+    var idx = sorted.indexOf(m);
+    var prev = idx > 0 ? sorted[idx - 1] : null;
+    var weightDiffText = '';
+    var fatDiffText = '';
+    if (prev){
+      var wd = Math.round((m.weightKg - prev.weightKg) * 10) / 10;
+      weightDiffText = ' <span class="small-muted">(' + (wd > 0 ? '▲ +' : (wd < 0 ? '▼ ' : '± ')) + wd + 'kg)</span>';
+      if (m.bodyFatPct != null && prev.bodyFatPct != null){
+        var fd = Math.round((m.bodyFatPct - prev.bodyFatPct) * 10) / 10;
+        fatDiffText = ' <span class="small-muted">(' + (fd > 0 ? '▲ +' : (fd < 0 ? '▼ ' : '± ')) + fd + '%)</span>';
+      }
+    }
+    html += '<div class="hist-item" style="padding:8px 0;">' +
+      '<div class="hist-ex" style="margin-top:0;">' + formatDateTR(m.date) + ' — ' + m.weightKg + 'kg' + weightDiffText +
+      (m.bodyFatPct != null ? (' · %' + m.bodyFatPct + ' yağ' + fatDiffText) : '') +
+      '</div>' +
+    '</div>';
+  });
   return html;
 }
 
@@ -641,6 +833,7 @@ function renderSettings(){
   var pr = state.profile;
   var html = '<div class="card">' +
     '<div class="card-title">Profil</div>' +
+    '<div class="card-sub">Ölçüm geçmişine kayıt eklemek için aşağıdaki "Yeni Ölçüm Ekle" bölümünü kullan.</div>' +
     '<div class="field"><label>Vücut Ağırlığı (kg)</label><input type="number" inputmode="decimal" step="0.1" id="set_weight" value="' + pr.weightKg + '"></div>' +
     '<div class="field"><label>Boy (cm)</label><input type="number" inputmode="decimal" step="1" id="set_height" value="' + pr.heightCm + '"></div>' +
     '<div class="field"><label>Vücut Yağı (%)</label><input type="number" inputmode="decimal" step="0.1" id="set_bodyfat" value="' + pr.bodyFatPct + '"></div>' +
@@ -649,6 +842,18 @@ function renderSettings(){
     '<div class="field" style="margin-bottom:6px;"><label>Su Hedefi (şişe / 700ml)</label><input type="number" inputmode="numeric" step="1" id="set_water_goal" value="' + pr.waterGoalBottles + '"></div>' +
     '<button class="btn-primary" onclick="saveSettings()">Kaydet</button>' +
   '</div>';
+
+  html += '<div class="card">' +
+    '<div class="card-title">Yeni Ölçüm Ekle</div>' +
+    '<div class="card-sub">Güncel ölçümünü gir; hem profilin hem ölçüm geçmişin güncellenir.</div>' +
+    '<div class="field"><label>Kilo (kg)</label><input type="number" inputmode="decimal" step="0.1" id="meas_weight" value="' + pr.weightKg + '"></div>' +
+    '<div class="field"><label>Vücut Yağı (%)</label><input type="number" inputmode="decimal" step="0.1" id="meas_bodyfat" value="' + pr.bodyFatPct + '"></div>' +
+    '<div class="field" style="margin-bottom:6px;"><label>Vücut Yaşı</label><input type="number" inputmode="numeric" step="1" id="meas_bodyage" value="' + pr.bodyAge + '"></div>' +
+    '<button class="btn-primary" onclick="saveMeasurement()">Ölçümü Kaydet</button>' +
+    '<div style="margin-top:14px;">' + renderMeasurementList() + '</div>' +
+  '</div>';
+
+  html += renderBlockStartCard();
 
   html += '<div class="card">' +
     '<div class="card-title">Program</div>' +

@@ -65,7 +65,11 @@ kullanım için tasarlandı.
 - Planlanan aralıklar (gün cinsinden, seans tipinden bir sonrakine):
   A→B: 2, B→C: 2, C→D: 2, D→A: 1 (döngü toplamı 7 gün, programda kayma
   yoksa haftalık Pazar/Salı/Perşembe/Cumartesi ritmine denk gelir).
-- İlk seans (A) blok başlangıç tarihinde (29 Ağustos 2026) başlar.
+- İlk seans (A) blok başlangıç tarihinde (varsayılan 29 Ağustos 2026) başlar.
+  Hiç seans tamamlanmamışken bu başlangıç tarihi kullanıcı tarafından
+  değiştirilebilir (bkz. Sürüm 2 Ek Özellikleri); ilk seans tamamlanır
+  tamamlanmaz kilitlenir, çünkü kayan takvim artık son tamamlanan seansa
+  göre ilerler.
 - Uygulama, tamamlanan seans sayısını da programın "hafta" ilerlemesi için
   kullanır (bkz. Faz hesaplama) — böylece kaçırılan antrenmanlar sadece
   takvimi değil, faz geçişini de gerçekçi biçimde geciktirir.
@@ -240,13 +244,42 @@ Romanian Deadlift, Walking Lunge, Barbell Curl, Triceps Pushdown, Plank.
 
 1. **Bugün** — sıradaki seans (gün tipi, gecikme durumu), egzersiz girişleri
    ve önceki seansla karşılaştırma, "Seansı Tamamla" butonu, faz/hafta
-   bilgisi, faz geçiş kontrolü banner'ı (hafta 12).
+   bilgisi, faz geçiş kontrolü banner'ı (hafta 12, varsa son ölçüm farkı
+   ile birlikte), ilk seans öncesi düzenlenebilir program başlangıç tarihi,
+   en az bir seans tamamlandıysa "Son Seansı Geri Al" butonu.
 2. **Su** — 700ml şişe sayacı, günlük hedef, ilerleme göstergesi.
 3. **Protein** — günlük hedef (otomatik hesaplanan), hızlı ekleme butonları,
-   geri al / sıfırla, aktif faz bilgisi.
-4. **Geçmiş** — tamamlanmış seans listesi ve egzersiz bazlı ilerleme.
-5. **Ayarlar** — kilo, boy, vücut yağı, su hedefi, protein çarpanı, verileri
-   sıfırlama.
+   geri al / sıfırla, aktif faz bilgisi, takviye notu.
+4. **Geçmiş** — tarihe göre birleşik kayıt listesi (o günün antrenman seansı
+   ve/veya su+protein toplamı bir arada), en üstte "Son Seansı Geri Al".
+5. **Ayarlar** — profil (kilo, boy, vücut yağı, su hedefi, protein çarpanı),
+   yeni ölçüm ekleme + son 5 ölçüm geçmişi, program başlangıç tarihi
+   (düzenlenebilir/kilitli), program özeti, verileri sıfırlama.
+
+## Sürüm 2 Ek Özellikleri
+
+- **Düzenlenebilir program başlangıcı:** `sessions.length === 0` iken
+  `blockStart` bir tarih seçiciyle değiştirilebilir (bugünden en fazla 3 gün
+  öncesine, en fazla 90 gün sonrasına kadar). Değiştirildiğinde
+  `blockEnd = blockStart + 168 gün` olarak yeniden hesaplanır. İlk seans
+  tamamlandıktan sonra alan kilitlenir ve salt okunur gösterilir.
+- **Seans geri alma:** "Seansı Tamamla" davranışı aynı kalır; en az bir
+  seans varken Bugün ve Geçmiş sekmelerinde görünen "Son Seansı Geri Al"
+  butonu, onay sonrası sadece en son seansı `sessions` dizisinden çıkarır —
+  kayan takvim otomatik olarak bir önceki duruma döner.
+- **Vücut ölçüm geçmişi:** Ayarlar'daki "Yeni Ölçüm Ekle" bölümü, girilen
+  kilo/vücut yağı/vücut yaşını hem `profile`'a hem `measurements` dizisine
+  (tarih damgalı) kaydeder. Son 5 ölçüm, bir önceki ölçüme göre farkla
+  birlikte listelenir. Hafta 12 faz geçiş banner'ında son iki ölçüm
+  arasındaki fark (varsa) gösterilir.
+- **Günlük su/protein geçmişi:** `dailyLogs` objesi her gün için
+  `{ waterBottles, proteinGrams }` tutar; gün değişip su/protein sıfırlanmadan
+  hemen önce o günün toplamı `dailyLogs`'a yazılır, bugünün değerleri de her
+  değişiklikte anlık senkronize edilir. Geçmiş sekmesi artık seans ve
+  su/protein verisini aynı tarih kartında birleşik gösterir.
+- **Geriye uyumluluk:** Eski (sürüm 1) `protokol_state` kaydı yüklenirken
+  `measurements` ve `dailyLogs` alanları yoksa boş dizi/obje olarak
+  tamamlanır; hata verilmez, mevcut seans/su/protein verisi korunur.
 
 ## Veri Modeli (localStorage, tek anahtar: `protokol_state`)
 
@@ -261,6 +294,7 @@ Romanian Deadlift, Walking Lunge, Barbell Curl, Triceps Pushdown, Plank.
     "waterGoalBottles": 5
   },
   "blockStart": "2026-08-29",
+  "blockEnd": "2027-02-13",
   "sessions": [
     {
       "date": "2026-08-29",
@@ -268,6 +302,12 @@ Romanian Deadlift, Walking Lunge, Barbell Curl, Triceps Pushdown, Plank.
       "exercises": { "deadlift": { "value": 100, "unit": "kg" } }
     }
   ],
+  "measurements": [
+    { "date": "2026-08-29", "weightKg": 90.5, "bodyFatPct": 21.4, "bodyAge": 36 }
+  ],
+  "dailyLogs": {
+    "2026-08-30": { "waterBottles": 5, "proteinGrams": 190 }
+  },
   "water": { "date": "2026-08-31", "bottles": 3 },
   "protein": { "date": "2026-08-31", "grams": 80, "history": [20, 30, 30] }
 }
