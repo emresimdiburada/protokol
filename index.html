@@ -203,7 +203,7 @@ var EXERCISES = {
     { id:'a_deadhang',   name:'Dead Hang (Duruş)',                 nameEn:'dead hang exercise',          unit:'dk' }
   ],
   B: [
-    { id:'b_bench',      name:'Barbell Bench Press',               nameEn:'barbell bench press',         unit:'kg' },
+    { id:'b_dbbench',    name:'Dumbbell Bench Press',              nameEn:'dumbbell bench press',        unit:'kg' },
     { id:'b_incline',    name:'Incline Dumbbell Press',            nameEn:'incline dumbbell press',      unit:'kg' },
     { id:'b_flye',       name:'Cable Chest Fly',                   nameEn:'cable chest fly',             unit:'kg' },
     { id:'b_shoulder',   name:'Seated Dumbbell Shoulder Press',    nameEn:'seated dumbbell shoulder press', unit:'kg' },
@@ -212,16 +212,16 @@ var EXERCISES = {
   ],
   C: [
     { id:'c_pullup',     name:'Ağırlıklı Pull-Up',                 nameEn:'weighted pull up',            unit:'kg' },
-    { id:'c_tbarrow',    name:'T-Bar Row',                         nameEn:'t bar row',                   unit:'kg' },
-    { id:'c_revfly',     name:'Reverse Pec Deck Fly',              nameEn:'reverse pec deck fly',        unit:'kg' },
-    { id:'c_bandpull',   name:'Band Pull-Apart (Omuz Sağlığı)',    nameEn:'band pull apart',             unit:'kg' },
+    { id:'c_csrow',      name:'Chest-Supported Dumbbell Row',      nameEn:'chest supported dumbbell row', unit:'kg' },
+    { id:'c_cablerevfly',name:'Cable Reverse Fly',                 nameEn:'cable reverse fly rear delt', unit:'kg' },
+    { id:'c_cableyraise',name:'Cable Y-Raise (Alt Makara, Omuz Sağlığı)', nameEn:'cable y raise shoulder', unit:'kg' },
     { id:'c_extrot',     name:'Cable External Rotation (Omuz Sağlığı)', nameEn:'cable external rotation shoulder', unit:'kg_arm' },
     { id:'c_farmers',    name:"Farmer's Carry (Duruş/Core)",       nameEn:'farmers carry exercise',      unit:'dk' }
   ],
   D: [
-    { id:'d_squat',      name:'Barbell Back Squat',                nameEn:'barbell back squat',          unit:'kg' },
+    { id:'d_goblet',     name:'Dumbbell Goblet Squat',             nameEn:'dumbbell goblet squat',       unit:'kg' },
     { id:'d_rdl',        name:'Romanian Deadlift',                 nameEn:'romanian deadlift',           unit:'kg' },
-    { id:'d_legpress',   name:'Leg Press',                         nameEn:'leg press machine',           unit:'kg' },
+    { id:'d_bulgarian',  name:'Dumbbell Bulgarian Split Squat',    nameEn:'dumbbell bulgarian split squat', unit:'kg_leg' },
     { id:'d_lunge',      name:'Walking Lunge',                     nameEn:'walking lunge dumbbell',      unit:'kg_leg' },
     { id:'d_curl',       name:'Barbell Curl',                      nameEn:'barbell curl',                unit:'kg' },
     { id:'d_pushdown',   name:'Triceps Pushdown',                  nameEn:'triceps pushdown cable',      unit:'kg' },
@@ -561,6 +561,14 @@ function renderProtein(){
       '<button class="btn-secondary" onclick="undoProtein()">↩ Geri Al</button>' +
       '<button class="btn-secondary" onclick="resetProtein()">Sıfırla</button>' +
     '</div>' +
+  '</div>';
+
+  html += '<div class="card">' +
+    '<div class="card-title">Takviye Notu</div>' +
+    '<div class="card-sub" style="margin-bottom:0;">Antrenman sonrası whey + günde 3-5g kreatin. ' +
+    'Magnezyum ürünlerinden (MAG Premium / Ocean ExtraMag) sadece biri kullanılmalı, ikisi birlikte değil. ' +
+    'D3K2 sadece damla veya kapsül formundan biriyle alınmalı. Kolajen, whey\'in yerine değil ek olarak düşünülmeli. ' +
+    'Detaylar için PROTOKOL_SPEC.md · Beslenme bölümüne bakın.</div>' +
   '</div>';
 
   return html;
