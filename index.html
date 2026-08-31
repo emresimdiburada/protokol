@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PROTOKOL">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b0d10">
+<title>PROTOKOL</title>
+<style>
+  :root{
+    --bg:#0b0d10;
+    --card:#14181d;
+    --card-2:#1b2028;
+    --border:#262c35;
+    --text:#e8ecef;
+    --muted:#8b95a1;
+    --accent:#3b82f6;
+    --accent-2:#60a5fa;
+    --danger:#ef4444;
+    --success:#22c55e;
+    --warn:#f59e0b;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;}
+  body{padding-bottom: calc(78px + env(safe-area-inset-bottom));}
+  h1,h2,h3,p{margin:0;}
+  .header{
+    position:sticky; top:0; z-index:10;
+    background:rgba(11,13,16,0.92); backdrop-filter:blur(10px);
+    padding: calc(14px + env(safe-area-inset-top)) 16px 12px 16px;
+    border-bottom:1px solid var(--border);
+  }
+  .header-row{display:flex; align-items:center; justify-content:space-between;}
+  .brand{font-size:20px; font-weight:800; letter-spacing:1px; color:#fff;}
+  .brand span{color:var(--accent-2);}
+  .badge{
+    font-size:12px; font-weight:700; padding:4px 10px; border-radius:999px;
+    background:var(--card-2); border:1px solid var(--border); color:var(--muted);
+    white-space:nowrap;
+  }
+  .badge.phase1{color:#93c5fd; border-color:#1d3a63;}
+  .badge.phase2{color:#fca5a5; border-color:#5b2323;}
+  .subrow{margin-top:6px; font-size:12px; color:var(--muted);}
+  main{padding:16px; max-width:520px; margin:0 auto;}
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:16px;
+    padding:16px; margin-bottom:14px;
+  }
+  .card-title{font-size:15px; font-weight:700; color:#fff; margin-bottom:4px;}
+  .card-sub{font-size:13px; color:var(--muted); margin-bottom:10px;}
+  .banner{
+    background:linear-gradient(135deg,#1d2b45,#241a3a); border:1px solid #3b4c78;
+    border-radius:16px; padding:14px 16px; margin-bottom:14px;
+  }
+  .banner b{color:#fff;}
+  .banner p{font-size:13px; color:#c7d2fe; margin-top:4px; line-height:1.5;}
+  .banner.due{background:linear-gradient(135deg,#3a1d1d,#331515); border-color:#7a2f2f;}
+  .banner.due p{color:#fecaca;}
+  .row-between{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .pill{
+    display:inline-block; font-size:11px; font-weight:800; padding:3px 8px;
+    border-radius:999px; background:var(--card-2); color:var(--accent-2);
+    border:1px solid var(--border); text-transform:uppercase; letter-spacing:.5px;
+  }
+  .pill.overdue{color:#fecaca; border-color:#5b2323; background:#2a1414;}
+  .pill.today{color:#bbf7d0; border-color:#1d4a2c; background:#122019;}
+  .pill.future{color:var(--muted);}
+  .exercise{
+    border-top:1px solid var(--border); padding:14px 0;
+  }
+  .exercise:first-child{border-top:none; padding-top:4px;}
+  .ex-top{display:flex; align-items:flex-start; justify-content:space-between; gap:8px;}
+  .ex-name{font-size:15px; font-weight:700; color:#fff;}
+  .unit-pill{
+    font-size:10px; font-weight:800; color:#111; background:var(--accent-2);
+    padding:2px 7px; border-radius:6px; margin-left:6px; vertical-align:middle;
+  }
+  .ex-prev{font-size:12.5px; color:var(--muted); margin-top:2px;}
+  .yt-link{
+    display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:700;
+    color:#fca5a5; text-decoration:none; border:1px solid #4b2323; background:#221313;
+    padding:6px 10px; border-radius:10px; white-space:nowrap;
+  }
+  .ex-input-row{display:flex; align-items:center; gap:10px; margin-top:10px;}
+  input[type=number], input[type=text]{
+    background:var(--card-2); border:1px solid var(--border); color:var(--text);
+    border-radius:12px; padding:12px 14px; font-size:16px; width:100%;
+    -moz-appearance:textfield;
+  }
+  input[type=number]::-webkit-inner-spin-button{ -webkit-appearance:none; }
+  .ex-diff{font-size:12.5px; font-weight:700; min-width:64px; text-align:right;}
+  .ex-diff.pos{color:var(--success);}
+  .ex-diff.neg{color:var(--danger);}
+  .ex-diff.zero{color:var(--muted);}
+  button{
+    font-family:inherit; cursor:pointer; border:none; border-radius:12px;
+    font-weight:700; font-size:15px;
+  }
+  .btn-primary{
+    width:100%; background:var(--accent); color:#fff; padding:16px;
+    min-height:52px; font-size:16px; margin-top:6px;
+  }
+  .btn-primary:active{background:#2f68d1;}
+  .btn-secondary{
+    background:var(--card-2); color:var(--text); border:1px solid var(--border);
+    padding:12px; min-height:48px;
+  }
+  .btn-danger{
+    background:#2a1414; color:#fca5a5; border:1px solid #5b2323; padding:14px;
+    min-height:48px; width:100%;
+  }
+  .counter-row{display:flex; align-items:center; justify-content:center; gap:18px; margin:14px 0;}
+  .counter-btn{
+    width:56px; height:56px; border-radius:16px; background:var(--card-2);
+    border:1px solid var(--border); color:#fff; font-size:26px; font-weight:800;
+  }
+  .counter-btn:active{background:#232a34;}
+  .counter-value{font-size:34px; font-weight:800; color:#fff; min-width:110px; text-align:center;}
+  .counter-value small{display:block; font-size:12px; font-weight:600; color:var(--muted); margin-top:2px;}
+  .progress-track{
+    height:12px; border-radius:999px; background:var(--card-2); border:1px solid var(--border);
+    overflow:hidden;
+  }
+  .progress-fill{height:100%; background:linear-gradient(90deg,var(--accent),var(--accent-2)); border-radius:999px; transition:width .25s ease;}
+  .progress-fill.water{background:linear-gradient(90deg,#0891b2,#22d3ee);}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .grid4{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:12px 0;}
+  .qbtn{background:var(--card-2); border:1px solid var(--border); color:#fff; padding:14px 4px; border-radius:12px; font-size:15px;}
+  .qbtn:active{background:#232a34;}
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:13px; color:var(--muted); margin-bottom:6px; font-weight:600;}
+  .hist-item{border-top:1px solid var(--border); padding:12px 0;}
+  .hist-item:first-child{border-top:none;}
+  .hist-date{font-size:13px; color:var(--muted); font-weight:700;}
+  .hist-day{font-size:15px; font-weight:800; color:#fff; margin-top:2px;}
+  .hist-ex{font-size:13px; color:var(--muted); margin-top:6px; line-height:1.6;}
+  .hist-ex b{color:var(--text); font-weight:600;}
+  .empty{color:var(--muted); font-size:14px; text-align:center; padding:26px 0;}
+  .tabbar{
+    position:fixed; bottom:0; left:0; right:0; z-index:20;
+    display:flex; background:rgba(20,24,29,0.96); backdrop-filter:blur(10px);
+    border-top:1px solid var(--border);
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom)) 6px;
+  }
+  .tab-btn{
+    flex:1; background:transparent; color:var(--muted); padding:8px 2px;
+    display:flex; flex-direction:column; align-items:center; gap:3px; font-size:11px;
+    font-weight:700; border-radius:12px;
+  }
+  .tab-btn .ic{font-size:20px;}
+  .tab-btn.active{color:var(--accent-2); background:rgba(59,130,246,0.12);}
+  .small-muted{font-size:12px; color:var(--muted);}
+  .divider{height:1px; background:var(--border); margin:14px 0;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-row">
+    <div class="brand">PROTO<span>KOL</span></div>
+    <div id="phaseBadge" class="badge">-</div>
+  </div>
+  <div class="subrow" id="headerSub">-</div>
+</div>
+
+<main id="main"></main>
+
+<nav class="tabbar">
+  <button class="tab-btn" data-tab="today" onclick="setTab('today')"><span class="ic">🏋️</span>Bugün</button>
+  <button class="tab-btn" data-tab="water" onclick="setTab('water')"><span class="ic">💧</span>Su</button>
+  <button class="tab-btn" data-tab="protein" onclick="setTab('protein')"><span class="ic">🍗</span>Protein</button>
+  <button class="tab-btn" data-tab="history" onclick="setTab('history')"><span class="ic">📜</span>Geçmiş</button>
+  <button class="tab-btn" data-tab="settings" onclick="setTab('settings')"><span class="ic">⚙️</span>Ayarlar</button>
+</nav>
+
+<script>
+"use strict";
+
+/* ---------- Sabitler ---------- */
+
+var STORAGE_KEY = 'protokol_state';
+
+var DAY_INFO = {
+  A: { title: 'Sırt / Duruş',        gapToNext: 2, next: 'B' },
+  B: { title: 'Göğüs / Omuz',        gapToNext: 2, next: 'C' },
+  C: { title: 'Sırt / Omuz Sağlığı', gapToNext: 2, next: 'D' },
+  D: { title: 'Bacak / Kol / Core',  gapToNext: 1, next: 'A' }
+};
+
+var EXERCISES = {
+  A: [
+    { id:'a_deadlift',   name:'Barbell Deadlift',                 nameEn:'barbell deadlift',            unit:'kg' },
+    { id:'a_latpull',    name:'Lat Pulldown (Geniş Tutuş)',        nameEn:'wide grip lat pulldown',      unit:'kg' },
+    { id:'a_cablerow',   name:'Seated Cable Row',                  nameEn:'seated cable row',            unit:'kg' },
+    { id:'a_facepull',   name:'Face Pull',                         nameEn:'face pull cable exercise',    unit:'kg' },
+    { id:'a_dbrow',      name:'Tek Kol Dumbbell Row',              nameEn:'single arm dumbbell row',     unit:'kg_arm' },
+    { id:'a_traprise',   name:'Prone Trap Raise (Duruş)',          nameEn:'prone trap raise',            unit:'kg' },
+    { id:'a_deadhang',   name:'Dead Hang (Duruş)',                 nameEn:'dead hang exercise',          unit:'dk' }
+  ],
+  B: [
+    { id:'b_bench',      name:'Barbell Bench Press',               nameEn:'barbell bench press',         unit:'kg' },
+    { id:'b_incline',    name:'Incline Dumbbell Press',            nameEn:'incline dumbbell press',      unit:'kg' },
+    { id:'b_flye',       name:'Cable Chest Fly',                   nameEn:'cable chest fly',             unit:'kg' },
+    { id:'b_shoulder',   name:'Seated Dumbbell Shoulder Press',    nameEn:'seated dumbbell shoulder press', unit:'kg' },
+    { id:'b_lateral',    name:'Lateral Raise',                     nameEn:'dumbbell lateral raise',      unit:'kg' },
+    { id:'b_dip',        name:'Ağırlıklı Dips',                    nameEn:'weighted dips chest',         unit:'kg' }
+  ],
+  C: [
+    { id:'c_pullup',     name:'Ağırlıklı Pull-Up',                 nameEn:'weighted pull up',            unit:'kg' },
+    { id:'c_tbarrow',    name:'T-Bar Row',                         nameEn:'t bar row',                   unit:'kg' },
+    { id:'c_revfly',     name:'Reverse Pec Deck Fly',              nameEn:'reverse pec deck fly',        unit:'kg' },
+    { id:'c_bandpull',   name:'Band Pull-Apart (Omuz Sağlığı)',    nameEn:'band pull apart',             unit:'kg' },
+    { id:'c_extrot',     name:'Cable External Rotation (Omuz Sağlığı)', nameEn:'cable external rotation shoulder', unit:'kg_arm' },
+    { id:'c_farmers',    name:"Farmer's Carry (Duruş/Core)",       nameEn:'farmers carry exercise',      unit:'dk' }
+  ],
+  D: [
+    { id:'d_squat',      name:'Barbell Back Squat',                nameEn:'barbell back squat',          unit:'kg' },
+    { id:'d_rdl',        name:'Romanian Deadlift',                 nameEn:'romanian deadlift',           unit:'kg' },
+    { id:'d_legpress',   name:'Leg Press',                         nameEn:'leg press machine',           unit:'kg' },
+    { id:'d_lunge',      name:'Walking Lunge',                     nameEn:'walking lunge dumbbell',      unit:'kg_leg' },
+    { id:'d_curl',       name:'Barbell Curl',                      nameEn:'barbell curl',                unit:'kg' },
+    { id:'d_pushdown',   name:'Triceps Pushdown',                  nameEn:'triceps pushdown cable',      unit:'kg' },
+    { id:'d_plank',      name:'Plank (Core)',                      nameEn:'plank exercise',              unit:'dk' }
+  ]
+};
+
+var QUICK_PROTEIN = [10, 20, 30, 50];
+
+function defaultState(){
+  var t = todayISO();
+  return {
+    profile: {
+      weightKg: 90.5,
+      heightCm: 191,
+      bodyFatPct: 21.4,
+      bodyAge: 36,
+      proteinPerKg: 2.2,
+      waterGoalBottles: 5
+    },
+    blockStart: '2026-08-29',
+    blockEnd: '2027-02-13',
+    sessions: [],
+    water: { date: t, bottles: 0 },
+    protein: { date: t, grams: 0, history: [] }
+  };
+}
+
+/* ---------- Tarih yardımcıları ---------- */
+
+function pad2(n){ return n < 10 ? '0' + n : '' + n; }
+function toISO(d){ return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); }
+function parseISO(s){ var p = s.split('-').map(Number); return new Date(p[0], p[1]-1, p[2]); }
+function addDays(iso, n){ var d = parseISO(iso); d.setDate(d.getDate() + n); return toISO(d); }
+function todayISO(){ return toISO(new Date()); }
+function daysBetween(fromISO, toISOStr){ return Math.round((parseISO(toISOStr) - parseISO(fromISO)) / 86400000); }
+function formatDateTR(iso){
+  var d = parseISO(iso);
+  var days = ['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
+  var months = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+  return days[d.getDay()] + ', ' + d.getDate() + ' ' + months[d.getMonth()];
+}
+
+/* ---------- Durum (state) ---------- */
+
+var state = null;
+
+function loadState(){
+  var raw = localStorage.getItem(STORAGE_KEY);
+  var def = defaultState();
+  if (!raw){ return def; }
+  try{
+    var parsed = JSON.parse(raw);
+    return {
+      profile: Object.assign({}, def.profile, parsed.profile || {}),
+      blockStart: parsed.blockStart || def.blockStart,
+      blockEnd: parsed.blockEnd || def.blockEnd,
+      sessions: Array.isArray(parsed.sessions) ? parsed.sessions : [],
+      water: parsed.water || def.water,
+      protein: parsed.protein || def.protein
+    };
+  } catch(e){
+    return def;
+  }
+}
+
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function normalizeDaily(){
+  var t = todayISO();
+  var changed = false;
+  if (state.water.date !== t){ state.water = { date: t, bottles: 0 }; changed = true; }
+  if (state.protein.date !== t){ state.protein = { date: t, grams: 0, history: [] }; changed = true; }
+  if (changed) saveState();
+}
+
+/* ---------- İş mantığı: kayan takvim ---------- */
+
+function getNextSession(){
+  var sessions = state.sessions;
+  if (sessions.length === 0){
+    return { dayType: 'A', dueDate: state.blockStart };
+  }
+  var last = sessions[sessions.length - 1];
+  var info = DAY_INFO[last.dayType];
+  return { dayType: info.next, dueDate: addDays(last.date, info.gapToNext) };
+}
+
+function getCompletedCount(){ return state.sessions.length; }
+function getCurrentWeek(){ return Math.floor(getCompletedCount() / 4) + 1; }
+function getPhase(){ return getCurrentWeek() <= 12 ? 1 : 2; }
+function isPhaseCheckWeek(){ return getCurrentWeek() === 12; }
+
+function getPrevSessionForDay(dayType){
+  for (var i = state.sessions.length - 1; i >= 0; i--){
+    if (state.sessions[i].dayType === dayType) return state.sessions[i];
+  }
+  return null;
+}
+
+function unitLabel(u){
+  if (u === 'kg') return 'kg';
+  if (u === 'kg_arm') return 'kg/kol';
+  if (u === 'kg_leg') return 'kg/bacak';
+  if (u === 'dk') return 'dk';
+  return '';
+}
+
+function ytLink(nameEn){
+  return 'https://www.youtube.com/results?search_query=' + encodeURIComponent(nameEn + ' exercise tutorial');
+}
+
+function proteinTarget(){
+  return Math.round(state.profile.weightKg * state.profile.proteinPerKg);
+}
+
+/* ---------- Sekme yönetimi ---------- */
+
+var activeTab = 'today';
+function setTab(t){
+  activeTab = t;
+  render();
+  window.scrollTo(0,0);
+}
+
+/* ---------- Render ---------- */
+
+function render(){
+  renderHeader();
+  var main = document.getElementById('main');
+  if (activeTab === 'today') main.innerHTML = renderToday();
+  else if (activeTab === 'water') main.innerHTML = renderWater();
+  else if (activeTab === 'protein') main.innerHTML = renderProtein();
+  else if (activeTab === 'history') main.innerHTML = renderHistory();
+  else if (activeTab === 'settings') main.innerHTML = renderSettings();
+
+  var btns = document.querySelectorAll('.tab-btn');
+  btns.forEach(function(b){
+    b.classList.toggle('active', b.getAttribute('data-tab') === activeTab);
+  });
+
+  attachExerciseInputListeners();
+}
+
+function renderHeader(){
+  var phase = getPhase();
+  var badge = document.getElementById('phaseBadge');
+  badge.textContent = 'Faz ' + phase + ' · Hafta ' + getCurrentWeek() + '/24';
+  badge.className = 'badge ' + (phase === 1 ? 'phase1' : 'phase2');
+
+  var today = todayISO();
+  var blockDaysLeft = daysBetween(today, state.blockEnd);
+  var sub = document.getElementById('headerSub');
+  if (blockDaysLeft >= 0){
+    sub.textContent = formatDateTR(today) + ' · Blok bitişine ' + blockDaysLeft + ' gün';
+  } else {
+    sub.textContent = formatDateTR(today) + ' · 6 aylık blok tamamlandı';
+  }
+}
+
+function renderToday(){
+  var next = getNextSession();
+  var today = todayISO();
+  var info = DAY_INFO[next.dayType];
+  var delta = daysBetween(next.dueDate, today);
+
+  var statusHtml;
+  if (delta < 0){
+    statusHtml = '<span class="pill future">' + Math.abs(delta) + ' gün sonra planlandı</span>';
+  } else if (delta === 0){
+    statusHtml = '<span class="pill today">Bugün planlandı</span>';
+  } else {
+    statusHtml = '<span class="pill overdue">' + delta + ' gün gecikti</span>';
+  }
+
+  var html = '';
+
+  if (isPhaseCheckWeek()){
+    html += '<div class="banner">' +
+      '<b>🔔 Hafta 12 · Faz Geçiş Kontrolü</b>' +
+      '<p>Recomp fazının sonuna yaklaştın. Vücut yağı, kilo ve fotoğraflarını güncelle. ' +
+      '13. haftadan itibaren otomatik olarak <b>Faz 2 – Lean Bulk</b> stratejisine geçilecek.</p>' +
+      '</div>';
+  }
+
+  if (delta > 0){
+    html += '<div class="banner due">' +
+      '<b>⏳ Program kaymış durumda</b>' +
+      '<p>Son seanstan bu yana planlanandan ' + delta + ' gün geriden geliyorsun. Sıradaki tüm seanslar buna göre otomatik kaydı.</p>' +
+      '</div>';
+  }
+
+  html += '<div class="card">';
+  html += '<div class="row-between"><h2 class="card-title" style="font-size:19px;">Gün ' + next.dayType + ' · ' + info.title + '</h2></div>';
+  html += '<div class="card-sub">' + statusHtml + ' <span class="small-muted">· planlanan tarih: ' + formatDateTR(next.dueDate) + '</span></div>';
+
+  var exList = EXERCISES[next.dayType];
+  var prevSession = getPrevSessionForDay(next.dayType);
+  exList.forEach(function(ex){
+    var prevVal = null;
+    if (prevSession && prevSession.exercises && prevSession.exercises[ex.id]){
+      prevVal = prevSession.exercises[ex.id].value;
+    }
+    html += '<div class="exercise">' +
+      '<div class="ex-top">' +
+        '<div><span class="ex-name">' + ex.name + '</span><span class="unit-pill">' + unitLabel(ex.unit) + '</span>' +
+        '<div class="ex-prev">' + (prevVal !== null ? 'Önceki: ' + prevVal + ' ' + unitLabel(ex.unit) : 'Önceki kayıt yok') + '</div>' +
+        '</div>' +
+        '<a class="yt-link" href="' + ytLink(ex.nameEn) + '" target="_blank" rel="noopener">▶ YouTube</a>' +
+      '</div>' +
+      '<div class="ex-input-row">' +
+        '<input type="number" inputmode="decimal" step="0.5" min="0" placeholder="' + unitLabel(ex.unit) + '" ' +
+          'id="ex_input_' + ex.id + '" data-exid="' + ex.id + '" data-prev="' + (prevVal !== null ? prevVal : '') + '">' +
+        '<span class="ex-diff zero" id="ex_diff_' + ex.id + '">' + (prevVal !== null ? '±0' : '') + '</span>' +
+      '</div>' +
+    '</div>';
+  });
+
+  html += '<button class="btn-primary" onclick="completeSession(\'' + next.dayType + '\')">Seansı Tamamla ✓</button>';
+  html += '</div>';
+
+  html += '<div class="card">' +
+    '<div class="card-title">İlerleme</div>' +
+    '<div class="card-sub">Tamamlanan seans: ' + getCompletedCount() + ' · Şu anki hafta: ' + getCurrentWeek() + '/24</div>' +
+    '<div class="progress-track"><div class="progress-fill" style="width:' + Math.min(100, Math.round(getCompletedCount()/96*100)) + '%"></div></div>' +
+  '</div>';
+
+  return html;
+}
+
+function attachExerciseInputListeners(){
+  document.querySelectorAll('.ex-input-row input[type=number]').forEach(function(inp){
+    inp.addEventListener('input', function(){
+      var exid = inp.getAttribute('data-exid');
+      var prevRaw = inp.getAttribute('data-prev');
+      var diffEl = document.getElementById('ex_diff_' + exid);
+      if (!diffEl) return;
+      if (prevRaw === '' || inp.value === ''){
+        diffEl.textContent = '';
+        return;
+      }
+      var diff = parseFloat(inp.value) - parseFloat(prevRaw);
+      diff = Math.round(diff * 100) / 100;
+      if (diff > 0){ diffEl.textContent = '▲ +' + diff; diffEl.className = 'ex-diff pos'; }
+      else if (diff < 0){ diffEl.textContent = '▼ ' + diff; diffEl.className = 'ex-diff neg'; }
+      else { diffEl.textContent = '± 0'; diffEl.className = 'ex-diff zero'; }
+    });
+  });
+}
+
+function completeSession(dayType){
+  var exList = EXERCISES[dayType];
+  var exercises = {};
+  exList.forEach(function(ex){
+    var el = document.getElementById('ex_input_' + ex.id);
+    if (el && el.value !== ''){
+      exercises[ex.id] = { value: parseFloat(el.value), unit: ex.unit };
+    }
+  });
+  if (Object.keys(exercises).length === 0){
+    if (!confirm('Hiç egzersiz girmedin. Yine de seansı boş olarak tamamlamak istiyor musun?')) return;
+  }
+  state.sessions.push({ date: todayISO(), dayType: dayType, exercises: exercises });
+  saveState();
+  render();
+}
+
+function renderWater(){
+  var w = state.water;
+  var goal = state.profile.waterGoalBottles;
+  var ml = w.bottles * 700;
+  var goalMl = goal * 700;
+  var pct = goalMl > 0 ? Math.min(100, Math.round(ml / goalMl * 100)) : 0;
+
+  var html = '<div class="card">' +
+    '<div class="card-title">Bugünkü Su Tüketimi</div>' +
+    '<div class="card-sub">700ml\'lik şişe bazında takip</div>' +
+    '<div class="counter-row">' +
+      '<button class="counter-btn" onclick="removeBottle()">–</button>' +
+      '<div class="counter-value">' + w.bottles + '<small>şişe (' + ml + ' ml)</small></div>' +
+      '<button class="counter-btn" onclick="addBottle()">+</button>' +
+    '</div>' +
+    '<div class="progress-track"><div class="progress-fill water" style="width:' + pct + '%"></div></div>' +
+    '<div class="card-sub" style="margin-top:8px; margin-bottom:0;">Hedef: ' + goal + ' şişe (' + goalMl + ' ml) · %' + pct + '</div>' +
+  '</div>';
+
+  html += '<div class="card">' +
+    '<div class="card-title">Günlük Hedef</div>' +
+    '<div class="field" style="margin-bottom:0;">' +
+      '<label>Hedef şişe sayısı (700ml)</label>' +
+      '<input type="number" inputmode="numeric" min="1" step="1" value="' + goal + '" onchange="updateWaterGoal(this.value)">' +
+    '</div>' +
+  '</div>';
+
+  return html;
+}
+
+function addBottle(){ state.water.bottles++; saveState(); render(); }
+function removeBottle(){ state.water.bottles = Math.max(0, state.water.bottles - 1); saveState(); render(); }
+function updateWaterGoal(v){
+  var n = parseInt(v, 10);
+  if (!isNaN(n) && n > 0){ state.profile.waterGoalBottles = n; saveState(); }
+  render();
+}
+
+function renderProtein(){
+  var p = state.protein;
+  var target = proteinTarget();
+  var pct = target > 0 ? Math.min(100, Math.round(p.grams / target * 100)) : 0;
+  var phase = getPhase();
+  var phaseText = phase === 1
+    ? 'Faz 1 · Recomp — hafif kalori açığı + yüksek protein (%' + state.profile.bodyFatPct + ' → hedef ~%16-17 vücut yağı)'
+    : 'Faz 2 · Lean Bulk — tanımın üzerine kas ekleme, kalori dengeye/hafif fazlaya çekilir';
+
+  var html = '<div class="card">' +
+    '<div class="card-title">Bugünkü Protein</div>' +
+    '<div class="card-sub">' + phaseText + '</div>' +
+    '<div class="counter-row" style="margin:10px 0;">' +
+      '<div class="counter-value" style="min-width:180px;">' + p.grams + ' / ' + target + 'g</div>' +
+    '</div>' +
+    '<div class="progress-track"><div class="progress-fill" style="width:' + pct + '%"></div></div>' +
+    '<div class="card-sub" style="margin-top:8px; margin-bottom:0;">Hedef: vücut ağırlığı × ' + state.profile.proteinPerKg + ' g/kg = ' + target + 'g</div>' +
+  '</div>';
+
+  html += '<div class="card">' +
+    '<div class="card-title">Hızlı Ekle</div>' +
+    '<div class="grid4">' +
+      QUICK_PROTEIN.map(function(g){ return '<button class="qbtn" onclick="addProtein(' + g + ')">+' + g + 'g</button>'; }).join('') +
+    '</div>' +
+    '<div class="ex-input-row">' +
+      '<input type="number" inputmode="numeric" min="0" step="1" placeholder="özel miktar (g)" id="proteinCustomInput">' +
+      '<button class="btn-secondary" onclick="addProteinCustom()">Ekle</button>' +
+    '</div>' +
+    '<div class="grid2" style="margin-top:12px;">' +
+      '<button class="btn-secondary" onclick="undoProtein()">↩ Geri Al</button>' +
+      '<button class="btn-secondary" onclick="resetProtein()">Sıfırla</button>' +
+    '</div>' +
+  '</div>';
+
+  return html;
+}
+
+function addProtein(g){
+  state.protein.grams += g;
+  state.protein.history.push(g);
+  saveState();
+  render();
+}
+
+function addProteinCustom(){
+  var el = document.getElementById('proteinCustomInput');
+  var v = parseFloat(el.value);
+  if (!isNaN(v) && v > 0){ addProtein(v); }
+}
+
+function undoProtein(){
+  var last = state.protein.history.pop();
+  if (last !== undefined){
+    state.protein.grams = Math.max(0, state.protein.grams - last);
+    saveState();
+  }
+  render();
+}
+
+function resetProtein(){
+  if (confirm('Bugünkü protein kaydını sıfırlamak istiyor musun?')){
+    state.protein.grams = 0;
+    state.protein.history = [];
+    saveState();
+    render();
+  }
+}
+
+function renderHistory(){
+  if (state.sessions.length === 0){
+    return '<div class="card"><div class="empty">Henüz tamamlanmış seans yok.<br>İlk seansını "Bugün" sekmesinden tamamla.</div></div>';
+  }
+  var html = '<div class="card"><div class="card-title">Tamamlanan Seanslar</div>';
+  var reversed = state.sessions.slice().reverse();
+  reversed.forEach(function(s){
+    var info = DAY_INFO[s.dayType];
+    var exIds = Object.keys(s.exercises || {});
+    html += '<div class="hist-item">' +
+      '<div class="hist-date">' + formatDateTR(s.date) + '</div>' +
+      '<div class="hist-day">Gün ' + s.dayType + ' · ' + info.title + '</div>';
+    if (exIds.length === 0){
+      html += '<div class="hist-ex">Egzersiz kaydı girilmedi</div>';
+    } else {
+      var exDefs = EXERCISES[s.dayType];
+      html += '<div class="hist-ex">';
+      exIds.forEach(function(id, i){
+        var def = exDefs.filter(function(e){ return e.id === id; })[0];
+        var rec = s.exercises[id];
+        if (def){
+          html += '<b>' + def.name + ':</b> ' + rec.value + ' ' + unitLabel(rec.unit) + (i < exIds.length-1 ? ' &nbsp;·&nbsp; ' : '');
+        }
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function renderSettings(){
+  var pr = state.profile;
+  var html = '<div class="card">' +
+    '<div class="card-title">Profil</div>' +
+    '<div class="field"><label>Vücut Ağırlığı (kg)</label><input type="number" inputmode="decimal" step="0.1" id="set_weight" value="' + pr.weightKg + '"></div>' +
+    '<div class="field"><label>Boy (cm)</label><input type="number" inputmode="decimal" step="1" id="set_height" value="' + pr.heightCm + '"></div>' +
+    '<div class="field"><label>Vücut Yağı (%)</label><input type="number" inputmode="decimal" step="0.1" id="set_bodyfat" value="' + pr.bodyFatPct + '"></div>' +
+    '<div class="field"><label>Vücut Yaşı</label><input type="number" inputmode="numeric" step="1" id="set_bodyage" value="' + pr.bodyAge + '"></div>' +
+    '<div class="field"><label>Protein Çarpanı (g/kg)</label><input type="number" inputmode="decimal" step="0.1" id="set_protein_mult" value="' + pr.proteinPerKg + '"></div>' +
+    '<div class="field" style="margin-bottom:6px;"><label>Su Hedefi (şişe / 700ml)</label><input type="number" inputmode="numeric" step="1" id="set_water_goal" value="' + pr.waterGoalBottles + '"></div>' +
+    '<button class="btn-primary" onclick="saveSettings()">Kaydet</button>' +
+  '</div>';
+
+  html += '<div class="card">' +
+    '<div class="card-title">Program</div>' +
+    '<div class="card-sub" style="margin-bottom:0;">Blok: ' + formatDateTR(state.blockStart) + ' – ' + formatDateTR(state.blockEnd) + '<br>Tamamlanan seans: ' + getCompletedCount() + ' · Hafta ' + getCurrentWeek() + '/24 · Faz ' + getPhase() + '</div>' +
+  '</div>';
+
+  html += '<div class="card">' +
+    '<div class="card-title">Tehlikeli Bölge</div>' +
+    '<div class="card-sub">Tüm seans geçmişi, su ve protein kayıtları silinir. Bu işlem geri alınamaz.</div>' +
+    '<button class="btn-danger" onclick="resetAllData()">Verileri Sıfırla</button>' +
+  '</div>';
+
+  return html;
+}
+
+function saveSettings(){
+  var weight = parseFloat(document.getElementById('set_weight').value);
+  var height = parseFloat(document.getElementById('set_height').value);
+  var bodyfat = parseFloat(document.getElementById('set_bodyfat').value);
+  var bodyage = parseFloat(document.getElementById('set_bodyage').value);
+  var proteinMult = parseFloat(document.getElementById('set_protein_mult').value);
+  var waterGoal = parseInt(document.getElementById('set_water_goal').value, 10);
+
+  if (!isNaN(weight) && weight > 0) state.profile.weightKg = weight;
+  if (!isNaN(height) && height > 0) state.profile.heightCm = height;
+  if (!isNaN(bodyfat) && bodyfat >= 0) state.profile.bodyFatPct = bodyfat;
+  if (!isNaN(bodyage) && bodyage > 0) state.profile.bodyAge = bodyage;
+  if (!isNaN(proteinMult) && proteinMult > 0) state.profile.proteinPerKg = proteinMult;
+  if (!isNaN(waterGoal) && waterGoal > 0) state.profile.waterGoalBottles = waterGoal;
+
+  saveState();
+  render();
+}
+
+function resetAllData(){
+  if (confirm('Tüm PROTOKOL verilerini (seanslar, su, protein, profil) silmek istediğinden emin misin?')){
+    if (confirm('Bu işlem geri alınamaz. Onaylıyor musun?')){
+      localStorage.removeItem(STORAGE_KEY);
+      state = defaultState();
+      saveState();
+      activeTab = 'today';
+      render();
+    }
+  }
+}
+
+/* ---------- Başlangıç ---------- */
+
+function init(){
+  state = loadState();
+  normalizeDaily();
+  render();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
