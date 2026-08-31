@@ -233,6 +233,7 @@ var EXERCISES = {
 var QUICK_PROTEIN = [10, 20, 30, 50];
 
 var BLOCK_LENGTH_DAYS = 168;
+var TOTAL_SESSIONS = 96;
 
 function defaultState(){
   var t = todayISO();
@@ -269,6 +270,11 @@ function formatDateTR(iso){
   var days = ['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
   var months = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
   return days[d.getDay()] + ', ' + d.getDate() + ' ' + months[d.getMonth()];
+}
+function formatDateShort(iso){
+  var d = parseISO(iso);
+  var months = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+  return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
 }
 
 /* ---------- Durum (state) ---------- */
@@ -342,6 +348,7 @@ function getNextSession(){
 
 function getCompletedCount(){ return state.sessions.length; }
 function getCurrentWeek(){ return Math.floor(getCompletedCount() / 4) + 1; }
+function getSessionsThisWeek(){ return getCompletedCount() % 4; }
 function getPhase(){ return getCurrentWeek() <= 12 ? 1 : 2; }
 function isPhaseCheckWeek(){ return getCurrentWeek() === 12; }
 
@@ -474,12 +481,12 @@ function renderHeader(){
 
   var today = todayISO();
   var blockDaysLeft = daysBetween(today, state.blockEnd);
+  var remaining = Math.max(0, TOTAL_SESSIONS - getCompletedCount());
+  var targetText = blockDaysLeft >= 0
+    ? ('Hedef: ' + formatDateShort(state.blockEnd))
+    : '6 aylık blok tamamlandı';
   var sub = document.getElementById('headerSub');
-  if (blockDaysLeft >= 0){
-    sub.textContent = formatDateTR(today) + ' · Blok bitişine ' + blockDaysLeft + ' gün';
-  } else {
-    sub.textContent = formatDateTR(today) + ' · 6 aylık blok tamamlandı';
-  }
+  sub.textContent = formatDateTR(today) + ' · ' + targetText + ' · ' + TOTAL_SESSIONS + ' seanstan ' + remaining + "'si kaldı";
 }
 
 function renderBlockStartCard(){
@@ -579,7 +586,8 @@ function renderToday(){
   html += '<div class="card">' +
     '<div class="card-title">İlerleme</div>' +
     '<div class="card-sub">Tamamlanan seans: ' + getCompletedCount() + ' · Şu anki hafta: ' + getCurrentWeek() + '/24</div>' +
-    '<div class="progress-track"><div class="progress-fill" style="width:' + Math.min(100, Math.round(getCompletedCount()/96*100)) + '%"></div></div>' +
+    '<div class="progress-track"><div class="progress-fill" style="width:' + Math.min(100, Math.round(getCompletedCount()/TOTAL_SESSIONS*100)) + '%"></div></div>' +
+    '<div class="card-sub" style="margin-top:8px; margin-bottom:0;">Bu hafta: ' + getSessionsThisWeek() + '/4 seans</div>' +
   '</div>';
 
   return html;
@@ -844,6 +852,16 @@ function renderSettings(){
   '</div>';
 
   html += '<div class="card">' +
+    '<div class="card-title">Yedekleme</div>' +
+    '<div class="card-sub">Verilerin sadece bu telefonda saklanıyor. Telefon değiştirirsen veya Safari verisini silersen kaybolur — düzenli yedek al.</div>' +
+    '<div class="grid2">' +
+      '<button class="btn-secondary" onclick="downloadBackup()">⬇ Yedeği İndir</button>' +
+      '<button class="btn-secondary" onclick="triggerRestoreFilePicker()">⬆ Yedekten Geri Yükle</button>' +
+    '</div>' +
+    '<input type="file" id="restoreFileInput" accept=".json,application/json" style="display:none;" onchange="restoreBackup(this)">' +
+  '</div>';
+
+  html += '<div class="card">' +
     '<div class="card-title">Yeni Ölçüm Ekle</div>' +
     '<div class="card-sub">Güncel ölçümünü gir; hem profilin hem ölçüm geçmişin güncellenir.</div>' +
     '<div class="field"><label>Kilo (kg)</label><input type="number" inputmode="decimal" step="0.1" id="meas_weight" value="' + pr.weightKg + '"></div>' +
@@ -888,6 +906,56 @@ function saveSettings(){
   render();
 }
 
+function downloadBackup(){
+  var json = JSON.stringify(state, null, 2);
+  var blob = new Blob([json], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'protokol-yedek-' + todayISO() + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function triggerRestoreFilePicker(){
+  var el = document.getElementById('restoreFileInput');
+  if (el) el.click();
+}
+
+function restoreBackup(fileInput){
+  var file = fileInput.files && fileInput.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var parsed;
+    try{
+      parsed = JSON.parse(e.target.result);
+    } catch(err){
+      alert('Dosya okunamadı: geçerli bir JSON dosyası değil.');
+      fileInput.value = '';
+      return;
+    }
+    if (!parsed || typeof parsed !== 'object' || !parsed.profile || !Array.isArray(parsed.sessions)){
+      alert('Bu dosya geçerli bir PROTOKOL yedeği gibi görünmüyor ("profile" / "sessions" alanları eksik).');
+      fileInput.value = '';
+      return;
+    }
+    if (!confirm('Bu işlem mevcut verilerinin üzerine yazacak, emin misin?')){
+      fileInput.value = '';
+      return;
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+    state = loadState();
+    normalizeDaily();
+    fileInput.value = '';
+    render();
+    alert('Yedek başarıyla geri yüklendi.');
+  };
+  reader.readAsText(file);
+}
+
 function resetAllData(){
   if (confirm('Tüm PROTOKOL verilerini (seanslar, su, protein, profil) silmek istediğinden emin misin?')){
     if (confirm('Bu işlem geri alınamaz. Onaylıyor musun?')){
@@ -902,10 +970,17 @@ function resetAllData(){
 
 /* ---------- Başlangıç ---------- */
 
+function registerServiceWorker(){
+  if ('serviceWorker' in navigator){
+    navigator.serviceWorker.register('service-worker.js').catch(function(){});
+  }
+}
+
 function init(){
   state = loadState();
   normalizeDaily();
   render();
+  registerServiceWorker();
 }
 
 document.addEventListener('DOMContentLoaded', init);

@@ -239,6 +239,8 @@ Romanian Deadlift, Walking Lunge, Barbell Curl, Triceps Pushdown, Plank.
 - Tek HTML dosyası: inline `<style>` ve inline `<script>`, dış bağımlılık
   yok (CDN dahi kullanılmaz), pure vanilla JS.
 - Tüm veri `localStorage`'da tutulur, sayfa yenilendiğinde veri kaybolmaz.
+- `service-worker.js` ile app shell cache'lenir; internet olmadan da açılır
+  (bkz. Sürüm 3 Ek Özellikleri).
 
 ## Uygulama İçi Ekranlar
 
@@ -246,15 +248,21 @@ Romanian Deadlift, Walking Lunge, Barbell Curl, Triceps Pushdown, Plank.
    ve önceki seansla karşılaştırma, "Seansı Tamamla" butonu, faz/hafta
    bilgisi, faz geçiş kontrolü banner'ı (hafta 12, varsa son ölçüm farkı
    ile birlikte), ilk seans öncesi düzenlenebilir program başlangıç tarihi,
-   en az bir seans tamamlandıysa "Son Seansı Geri Al" butonu.
+   en az bir seans tamamlandıysa "Son Seansı Geri Al" butonu, ilerleme
+   kartında bu haftaki seans sayısı (X/4).
 2. **Su** — 700ml şişe sayacı, günlük hedef, ilerleme göstergesi.
 3. **Protein** — günlük hedef (otomatik hesaplanan), hızlı ekleme butonları,
    geri al / sıfırla, aktif faz bilgisi, takviye notu.
 4. **Geçmiş** — tarihe göre birleşik kayıt listesi (o günün antrenman seansı
    ve/veya su+protein toplamı bir arada), en üstte "Son Seansı Geri Al".
 5. **Ayarlar** — profil (kilo, boy, vücut yağı, su hedefi, protein çarpanı),
-   yeni ölçüm ekleme + son 5 ölçüm geçmişi, program başlangıç tarihi
-   (düzenlenebilir/kilitli), program özeti, verileri sıfırlama.
+   yedekleme (indir/geri yükle), yeni ölçüm ekleme + son 5 ölçüm geçmişi,
+   program başlangıç tarihi (düzenlenebilir/kilitli), program özeti,
+   verileri sıfırlama.
+
+Header'ın alt satırı (`headerSub`), bugünün tarihinin yanında blok hedef
+tarihini (`Hedef: 13 Şub 2027`) ve toplam 96 seanstan kaç tanesinin kaldığını
+(`96 seanstan 92'si kaldı`) her zaman gösterir.
 
 ## Sürüm 2 Ek Özellikleri
 
@@ -280,6 +288,30 @@ Romanian Deadlift, Walking Lunge, Barbell Curl, Triceps Pushdown, Plank.
 - **Geriye uyumluluk:** Eski (sürüm 1) `protokol_state` kaydı yüklenirken
   `measurements` ve `dailyLogs` alanları yoksa boş dizi/obje olarak
   tamamlanır; hata verilmez, mevcut seans/su/protein verisi korunur.
+
+## Sürüm 3 Ek Özellikleri
+
+- **Header'da hedef tarih ve kalan seans:** `headerSub`, tamamlanan seans
+  sayısına göre `96 - tamamlanan` (0'ın altına inmez) kalan seansı ve blok
+  bitiş tarihini (`Hedef: 13 Şub 2027`) gösterir; blok süresi dolmuşsa
+  "6 aylık blok tamamlandı" yazar, kalan seans sayısı yine gösterilir.
+- **Yedekleme / geri yükleme:** Ayarlar → Yedekleme kartında "Yedeği İndir"
+  tüm `state` objesini `protokol-yedek-TARİH.json` olarak indirir (Blob +
+  `<a download>`); "Yedekten Geri Yükle" seçilen JSON dosyasını okur, temel
+  alan doğrulaması yapar (`profile`, `sessions` var mı), onay ister ve
+  onaylanırsa `localStorage`'a yazıp `loadState()` üzerinden (eski
+  sürümlerle geriye uyumlu şekilde) state'i yeniler. Veri sadece cihazda
+  tutulduğu için düzenli yedek alınması önerilir.
+- **Offline çalışma:** `service-worker.js`, app shell'i (`./`, `./index.html`)
+  ilk ziyarette cache'ler; sonraki isteklerde önce ağdan güncel sürümü almayı
+  dener, başarısız olursa (internet yok) cache'ten sunar. Yollar GitHub
+  Pages'in `/protokol/` alt yolunda da çalışacak şekilde göreceli tutulur;
+  `index.html` bu worker'ı `navigator.serviceWorker.register('service-worker.js')`
+  ile (göreceli yol) kaydeder.
+- **Haftalık tutarlılık göstergesi:** Bugün → İlerleme kartında, hafta
+  hesaplamasıyla aynı mantıkla (`tamamlanan seans sayısı % 4`) "Bu hafta:
+  X/4 seans" gösterilir — kayan takvim felsefesiyle tutarlı biçimde,
+  haftalar takvim günü değil tamamlanan 4'lü seans grupları olarak sayılır.
 
 ## Veri Modeli (localStorage, tek anahtar: `protokol_state`)
 
