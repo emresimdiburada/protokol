@@ -367,14 +367,15 @@ function setBlockStart(newVal){
   if (!newVal){ render(); return; }
   var minDate = addDays(todayISO(), -3);
   var maxDate = addDays(todayISO(), 90);
-  var inRange = (newVal >= minDate) && (newVal <= maxDate);
-  if (!inRange){
-    alert('Program başlangıç tarihi bugünden en fazla 3 gün önce veya en fazla 90 gün sonra olabilir.');
-    render();
-    return;
-  }
-  state.blockStart = newVal;
-  state.blockEnd = addDays(newVal, BLOCK_LENGTH_DAYS);
+  // iOS Safari'nin tarih tekerleği (wheel picker) gün/ay/yıl tek tek
+  // çevrilirken ara adımlarda geçici olarak aralık dışı bir değer üretebilir.
+  // Bunu hata olarak göstermek yerine sessizce en yakın geçerli tarihe
+  // yuvarlıyoruz; kullanıcı hiçbir uyarı görmez.
+  var clamped = newVal;
+  if (clamped < minDate) clamped = minDate;
+  else if (clamped > maxDate) clamped = maxDate;
+  state.blockStart = clamped;
+  state.blockEnd = addDays(clamped, BLOCK_LENGTH_DAYS);
   saveState();
   render();
 }
