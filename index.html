@@ -80,7 +80,17 @@
     font-size:10px; font-weight:800; color:#111; background:var(--accent-2);
     padding:2px 7px; border-radius:6px; margin-left:6px; vertical-align:middle;
   }
+  .ex-prescription{font-size:12.5px; color:var(--accent-2); font-weight:700; margin-top:3px;}
   .ex-prev{font-size:12.5px; color:var(--muted); margin-top:2px;}
+  .hint-badge{
+    font-size:12px; font-weight:700; color:#fbbf24; background:rgba(245,158,11,0.12);
+    border:1px solid rgba(245,158,11,0.35); padding:5px 9px; border-radius:8px;
+    margin-top:6px; display:inline-block;
+  }
+  .quote-banner{
+    font-size:13.5px; font-style:italic; color:var(--accent-2); text-align:center;
+    padding:2px 8px 14px 8px; line-height:1.5;
+  }
   .yt-link{
     display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:700;
     color:#fca5a5; text-decoration:none; border:1px solid #4b2323; background:#221313;
@@ -199,38 +209,38 @@ var DAY_INFO = {
 
 var EXERCISES = {
   A: [
-    { id:'a_deadlift',   name:'Barbell Deadlift',                 nameEn:'barbell deadlift',            unit:'kg' },
-    { id:'a_latpull',    name:'Lat Pulldown (Geniş Tutuş)',        nameEn:'wide grip lat pulldown',      unit:'kg' },
-    { id:'a_cablerow',   name:'Seated Cable Row',                  nameEn:'seated cable row',            unit:'kg' },
-    { id:'a_facepull',   name:'Face Pull',                         nameEn:'face pull cable exercise',    unit:'kg' },
-    { id:'a_dbrow',      name:'Tek Kol Dumbbell Row',              nameEn:'single arm dumbbell row',     unit:'kg_arm' },
-    { id:'a_traprise',   name:'Prone Trap Raise (Duruş)',          nameEn:'prone trap raise',            unit:'kg' },
-    { id:'a_deadhang',   name:'Dead Hang (Duruş)',                 nameEn:'dead hang exercise',          unit:'dk' }
+    { id:'a_deadlift',   name:'Barbell Deadlift',                 nameEn:'barbell deadlift',            unit:'kg',     prescription:{ sets:4, target:'6-10 tekrar' } },
+    { id:'a_latpull',    name:'Lat Pulldown (Geniş Tutuş)',        nameEn:'wide grip lat pulldown',      unit:'kg',     prescription:{ sets:3, target:'12-15 tekrar' } },
+    { id:'a_cablerow',   name:'Seated Cable Row',                  nameEn:'seated cable row',            unit:'kg',     prescription:{ sets:3, target:'12-15 tekrar' } },
+    { id:'a_facepull',   name:'Face Pull',                         nameEn:'face pull cable exercise',    unit:'kg',     prescription:{ sets:3, target:'12-15 tekrar' } },
+    { id:'a_dbrow',      name:'Tek Kol Dumbbell Row',              nameEn:'single arm dumbbell row',     unit:'kg_arm', prescription:{ sets:3, target:'12-15 tekrar' } },
+    { id:'a_traprise',   name:'Prone Trap Raise (Duruş)',          nameEn:'prone trap raise',            unit:'kg',     prescription:{ sets:3, target:'15 tekrar' } },
+    { id:'a_deadhang',   name:'Dead Hang (Duruş)',                 nameEn:'dead hang exercise',          unit:'dk',     prescription:{ sets:3, target:'maks. asılı kal (hedef 20-30 sn)' } }
   ],
   B: [
-    { id:'b_dbbench',    name:'Dumbbell Bench Press',              nameEn:'dumbbell bench press',        unit:'kg' },
-    { id:'b_incline',    name:'Incline Dumbbell Press',            nameEn:'incline dumbbell press',      unit:'kg' },
-    { id:'b_flye',       name:'Cable Chest Fly',                   nameEn:'cable chest fly',             unit:'kg' },
-    { id:'b_shoulder',   name:'Seated Dumbbell Shoulder Press',    nameEn:'seated dumbbell shoulder press', unit:'kg' },
-    { id:'b_lateral',    name:'Lateral Raise',                     nameEn:'dumbbell lateral raise',      unit:'kg' },
-    { id:'b_dip',        name:'Ağırlıklı Dips',                    nameEn:'weighted dips chest',         unit:'kg' }
+    { id:'b_dbbench',    name:'Dumbbell Bench Press',              nameEn:'dumbbell bench press',        unit:'kg',     prescription:{ sets:4, target:'6-10 tekrar' } },
+    { id:'b_incline',    name:'Incline Dumbbell Press',            nameEn:'incline dumbbell press',      unit:'kg',     prescription:{ sets:4, target:'6-10 tekrar' } },
+    { id:'b_flye',       name:'Cable Chest Fly',                   nameEn:'cable chest fly',             unit:'kg',     prescription:{ sets:3, target:'12-15 tekrar' } },
+    { id:'b_shoulder',   name:'Seated Dumbbell Shoulder Press',    nameEn:'seated dumbbell shoulder press', unit:'kg',  prescription:{ sets:3, target:'12-15 tekrar' } },
+    { id:'b_lateral',    name:'Lateral Raise',                     nameEn:'dumbbell lateral raise',      unit:'kg',     prescription:{ sets:3, target:'12-15 tekrar' } },
+    { id:'b_dip',        name:'Ağırlıklı Dips',                    nameEn:'weighted dips chest',         unit:'kg',     prescription:{ sets:4, target:'6-10 tekrar' } }
   ],
   C: [
-    { id:'c_pullup',     name:'Ağırlıklı Pull-Up',                 nameEn:'weighted pull up',            unit:'kg' },
-    { id:'c_csrow',      name:'Chest-Supported Dumbbell Row',      nameEn:'chest supported dumbbell row', unit:'kg' },
-    { id:'c_cablerevfly',name:'Cable Reverse Fly',                 nameEn:'cable reverse fly rear delt', unit:'kg' },
-    { id:'c_cableyraise',name:'Cable Y-Raise (Alt Makara, Omuz Sağlığı)', nameEn:'cable y raise shoulder', unit:'kg' },
-    { id:'c_extrot',     name:'Cable External Rotation (Omuz Sağlığı)', nameEn:'cable external rotation shoulder', unit:'kg_arm' },
-    { id:'c_farmers',    name:"Farmer's Carry (Duruş/Core)",       nameEn:'farmers carry exercise',      unit:'dk' }
+    { id:'c_pullup',     name:'Ağırlıklı Pull-Up',                 nameEn:'weighted pull up',            unit:'kg',     prescription:{ sets:4, target:'6-10 tekrar' } },
+    { id:'c_csrow',      name:'Chest-Supported Dumbbell Row',      nameEn:'chest supported dumbbell row', unit:'kg',    prescription:{ sets:3, target:'12-15 tekrar' } },
+    { id:'c_cablerevfly',name:'Cable Reverse Fly',                 nameEn:'cable reverse fly rear delt', unit:'kg',     prescription:{ sets:3, target:'12-15 tekrar' } },
+    { id:'c_cableyraise',name:'Cable Y-Raise (Alt Makara, Omuz Sağlığı)', nameEn:'cable y raise shoulder', unit:'kg',   prescription:{ sets:3, target:'12-15 tekrar' } },
+    { id:'c_extrot',     name:'Cable External Rotation (Omuz Sağlığı)', nameEn:'cable external rotation shoulder', unit:'kg_arm', prescription:{ sets:3, target:'12-15 tekrar' } },
+    { id:'c_farmers',    name:"Farmer's Carry (Duruş/Core)",       nameEn:'farmers carry exercise',      unit:'dk',     prescription:{ sets:3, target:'40m ya da 45-60 sn' } }
   ],
   D: [
-    { id:'d_goblet',     name:'Dumbbell Goblet Squat',             nameEn:'dumbbell goblet squat',       unit:'kg' },
-    { id:'d_rdl',        name:'Romanian Deadlift',                 nameEn:'romanian deadlift',           unit:'kg' },
-    { id:'d_bulgarian',  name:'Dumbbell Bulgarian Split Squat',    nameEn:'dumbbell bulgarian split squat', unit:'kg_leg' },
-    { id:'d_lunge',      name:'Walking Lunge',                     nameEn:'walking lunge dumbbell',      unit:'kg_leg' },
-    { id:'d_curl',       name:'Barbell Curl',                      nameEn:'barbell curl',                unit:'kg' },
-    { id:'d_pushdown',   name:'Triceps Pushdown',                  nameEn:'triceps pushdown cable',      unit:'kg' },
-    { id:'d_plank',      name:'Plank (Core)',                      nameEn:'plank exercise',              unit:'dk' }
+    { id:'d_goblet',     name:'Dumbbell Goblet Squat',             nameEn:'dumbbell goblet squat',       unit:'kg',     prescription:{ sets:4, target:'6-10 tekrar' } },
+    { id:'d_rdl',        name:'Romanian Deadlift',                 nameEn:'romanian deadlift',           unit:'kg',     prescription:{ sets:4, target:'6-10 tekrar' } },
+    { id:'d_bulgarian',  name:'Dumbbell Bulgarian Split Squat',    nameEn:'dumbbell bulgarian split squat', unit:'kg_leg', prescription:{ sets:4, target:'6-10 tekrar/bacak' } },
+    { id:'d_lunge',      name:'Walking Lunge',                     nameEn:'walking lunge dumbbell',      unit:'kg_leg', prescription:{ sets:3, target:'12-15 tekrar/bacak' } },
+    { id:'d_curl',       name:'Barbell Curl',                      nameEn:'barbell curl',                unit:'kg',     prescription:{ sets:4, target:'6-10 tekrar' } },
+    { id:'d_pushdown',   name:'Triceps Pushdown',                  nameEn:'triceps pushdown cable',      unit:'kg',     prescription:{ sets:3, target:'12-15 tekrar' } },
+    { id:'d_plank',      name:'Plank (Core)',                      nameEn:'plank exercise',              unit:'dk',     prescription:{ sets:3, target:'45-60 sn' } }
   ]
 };
 
@@ -239,6 +249,51 @@ var QUICK_PROTEIN = [10, 20, 30, 50];
 var BLOCK_LENGTH_DAYS = 168;
 var TOTAL_SESSIONS = 96;
 var DEFAULT_BLOCK_START = '2026-08-29';
+
+var MOTIVATION_QUOTES = [
+  'Bugün attığın her adım, aynadaki o hedefe bir gün daha yaklaştırıyor.',
+  'Duruşun karakterini yansıtır — omuzlarını geriye, göğsünü öne çıkar.',
+  'Kaptan Amerika bir günde olmadı, sen de olmayacaksın — ama her antrenman seni oraya taşıyor.',
+  'Malta’nın güneşinde o formda yürümek istiyorsan, bugünkü set senin.',
+  'Disiplin, motivasyonun bittiği yerde başlar.',
+  '6 ay kısa gibi görünür ama her hafta kalıcı bir iz bırakır.',
+  'Sabır, ağırlıktan daha güçlü bir kastır — bugün de kullan.',
+  'İspanya sahillerinde çekilecek o fotoğrafı bugün inşa ediyorsun.',
+  'Güç bir anda gelmez, tutarlılıkla birikir.',
+  'Bugün kaçırdığın bir set değil, yarın bulacağın bir bahane.',
+  'Omuzların dik, nefesin derin, hedefin net — hazırsın.',
+  'Küçük bir ilerleme bile ilerlemedir — bugün onu yakala.',
+  'Aynadaki adamı bugünkü seçimlerin şekillendiriyor.',
+  'Zor günler, en kalıcı sonuçları bırakan günlerdir.',
+  'Bir set daha — sadece bir tane, o bile fark yaratır.',
+  'Vücudun her hareketi hatırlar, disiplinin her günü sayar.',
+  'Kaptan Amerika’nın sırrı yetenek değil, asla bırakmamaktı.',
+  'Bugün rahat olanı değil, doğru olanı seç.',
+  'Duruşunu düzelt, günün geri kalanı da seni takip eder.',
+  'Malta’ya, İspanya’ya giden yol bugünkü antrenmandan geçiyor.',
+  'Sen burada olmak için çok şey feda ettin — bugün de vazgeçme.',
+  'Güçlü bir sırt, güçlü bir duruşun temelidir.',
+  '6 aylık blok bitmeden önce, bugünün hesabını ver.',
+  'En iyi versiyonun, bugün attığın adımların toplamı.',
+  'Yorgunluk geçici, bıraktığın alışkanlık kalıcı.',
+  'Bir gün kaçsa da program kaymaz — sen de kaçma, devam et.',
+  'Bugünkü ter, yarınki güvenin temeli.',
+  'Hayalindeki tatil fotoğrafı, bugünkü tekrarlarla netleşiyor.',
+  'Disiplin özgürlüktür — bugün bir set daha özgürsün.',
+  'Vücudun seni hiç yalan söylemeyen tek aynadır.',
+  'Bugün zor, altı ay sonra değerli.',
+  'Sadece kaslarını değil, karakterini de inşa ediyorsun.'
+];
+
+function motivationIndexForToday(){
+  var d = parseISO(todayISO());
+  var dayNumber = Math.floor(d.getTime() / 86400000);
+  return ((dayNumber % MOTIVATION_QUOTES.length) + MOTIVATION_QUOTES.length) % MOTIVATION_QUOTES.length;
+}
+
+function todaysMotivationQuote(){
+  return MOTIVATION_QUOTES[motivationIndexForToday()];
+}
 
 function defaultState(){
   var t = todayISO();
@@ -361,6 +416,22 @@ function getPrevSessionForDay(dayType){
     if (state.sessions[i].dayType === dayType) return state.sessions[i];
   }
   return null;
+}
+
+function getLastNValuesForExercise(dayType, exId, n){
+  var vals = [];
+  for (var i = state.sessions.length - 1; i >= 0 && vals.length < n; i--){
+    var s = state.sessions[i];
+    if (s.dayType === dayType && s.exercises && s.exercises[exId]){
+      vals.unshift(s.exercises[exId].value);
+    }
+  }
+  return vals;
+}
+
+function shouldShowProgressionHint(dayType, exId){
+  var lastTwo = getLastNValuesForExercise(dayType, exId, 2);
+  return lastTwo.length === 2 && lastTwo[1] >= lastTwo[0];
 }
 
 function setBlockStart(newVal){
@@ -555,6 +626,8 @@ function renderToday(){
 
   var html = '';
 
+  html += '<div class="quote-banner">“' + todaysMotivationQuote() + '”</div>';
+
   if (state.sessions.length === 0){
     html += renderBlockStartCard();
   }
@@ -591,10 +664,19 @@ function renderToday(){
     if (prevSession && prevSession.exercises && prevSession.exercises[ex.id]){
       prevVal = prevSession.exercises[ex.id].value;
     }
+    var hintHtml = '';
+    if (shouldShowProgressionHint(next.dayType, ex.id)){
+      var hintText = ex.unit === 'dk'
+        ? '💡 İlerleme zamanı — bu sefer biraz daha uzun süre dene'
+        : '💡 İlerleme zamanı — bu sefer biraz daha ağırlık dene';
+      hintHtml = '<div class="hint-badge">' + hintText + '</div>';
+    }
     html += '<div class="exercise">' +
       '<div class="ex-top">' +
         '<div><span class="ex-name">' + ex.name + '</span><span class="unit-pill">' + unitLabel(ex.unit) + '</span>' +
+        '<div class="ex-prescription">' + ex.prescription.sets + ' set × ' + ex.prescription.target + '</div>' +
         '<div class="ex-prev">' + (prevVal !== null ? 'Önceki: ' + prevVal + ' ' + unitLabel(ex.unit) : 'Önceki kayıt yok') + '</div>' +
+        hintHtml +
         '</div>' +
         '<a class="yt-link" href="' + ytLink(ex.nameEn) + '" target="_blank" rel="noopener">▶ YouTube</a>' +
       '</div>' +

@@ -95,38 +95,57 @@ kullanım için tasarlandı.
 > [Ekipman Envanteri ve Hareket Eşleştirmesi](#ekipman-envanteri-ve-hareket-eşleştirmesi).
 
 **Gün A — Sırt / Duruş**
-1. Barbell Deadlift — kg
-2. Wide-Grip Lat Pulldown — kg
-3. Seated Cable Row — kg
-4. Face Pull — kg
-5. Single-Arm Dumbbell Row — kg/kol
-6. Prone Trap Raise (Duruş) — kg
-7. Dead Hang (Duruş) — dk
+1. Barbell Deadlift — kg — 4 set × 6-10 tekrar
+2. Wide-Grip Lat Pulldown — kg — 3 set × 12-15 tekrar
+3. Seated Cable Row — kg — 3 set × 12-15 tekrar
+4. Face Pull — kg — 3 set × 12-15 tekrar
+5. Single-Arm Dumbbell Row — kg/kol — 3 set × 12-15 tekrar
+6. Prone Trap Raise (Duruş) — kg — 3 set × 15 tekrar
+7. Dead Hang (Duruş) — dk — 3 set × maks. asılı kal (hedef 20-30 sn)
 
 **Gün B — Göğüs / Omuz**
-1. Dumbbell Bench Press — kg *(değişti: bkz. eşleştirme tablosu)*
-2. Incline Dumbbell Press — kg
-3. Cable Chest Fly — kg
-4. Seated Dumbbell Shoulder Press — kg
-5. Lateral Raise — kg
-6. Weighted Dip — kg
+1. Dumbbell Bench Press — kg — 4 set × 6-10 tekrar *(değişti: bkz. eşleştirme tablosu)*
+2. Incline Dumbbell Press — kg — 4 set × 6-10 tekrar
+3. Cable Chest Fly — kg — 3 set × 12-15 tekrar
+4. Seated Dumbbell Shoulder Press — kg — 3 set × 12-15 tekrar
+5. Lateral Raise — kg — 3 set × 12-15 tekrar
+6. Weighted Dip — kg — 4 set × 6-10 tekrar
 
 **Gün C — Sırt / Omuz Sağlığı**
-1. Weighted Pull-Up — kg
-2. Chest-Supported Dumbbell Row — kg *(değişti: bkz. eşleştirme tablosu)*
-3. Cable Reverse Fly — kg *(değişti: bkz. eşleştirme tablosu)*
-4. Cable Y-Raise (Alt Makara, Omuz Sağlığı) — kg *(değişti: bkz. eşleştirme tablosu)*
-5. Cable External Rotation (Omuz Sağlığı) — kg/kol
-6. Farmer's Carry (Duruş/Core) — dk
+1. Weighted Pull-Up — kg — 4 set × 6-10 tekrar
+2. Chest-Supported Dumbbell Row — kg — 3 set × 12-15 tekrar *(değişti: bkz. eşleştirme tablosu)*
+3. Cable Reverse Fly — kg — 3 set × 12-15 tekrar *(değişti: bkz. eşleştirme tablosu)*
+4. Cable Y-Raise (Alt Makara, Omuz Sağlığı) — kg — 3 set × 12-15 tekrar *(değişti: bkz. eşleştirme tablosu)*
+5. Cable External Rotation (Omuz Sağlığı) — kg/kol — 3 set × 12-15 tekrar
+6. Farmer's Carry (Duruş/Core) — dk — 3 set × 40m ya da 45-60 sn
 
 **Gün D — Bacak / Kol / Core**
-1. Dumbbell Goblet Squat — kg *(değişti: bkz. eşleştirme tablosu)*
-2. Romanian Deadlift — kg
-3. Dumbbell Bulgarian Split Squat — kg/bacak *(değişti: bkz. eşleştirme tablosu)*
-4. Walking Lunge — kg/bacak
-5. Barbell Curl — kg
-6. Triceps Pushdown — kg
-7. Plank (Core) — dk
+1. Dumbbell Goblet Squat — kg — 4 set × 6-10 tekrar *(değişti: bkz. eşleştirme tablosu)*
+2. Romanian Deadlift — kg — 4 set × 6-10 tekrar
+3. Dumbbell Bulgarian Split Squat — kg/bacak — 4 set × 6-10 tekrar/bacak *(değişti: bkz. eşleştirme tablosu)*
+4. Walking Lunge — kg/bacak — 3 set × 12-15 tekrar/bacak
+5. Barbell Curl — kg — 4 set × 6-10 tekrar
+6. Triceps Pushdown — kg — 3 set × 12-15 tekrar
+7. Plank (Core) — dk — 3 set × 45-60 sn
+
+### Bilimsel Dayanak (Set / Tekrar Şeması)
+
+Set ve tekrar aralıkları, direnç antrenmanı literatüründe yaygın kabul gören
+birkaç genel prensibe dayanır: (1) hipertrofi (kas büyümesi) için ~6-15
+tekrar aralığının geniş bir "etkili bölge" oluşturduğu, tekrar sayısından çok
+haftalık toplam hacim ve çalışma setinin yorgunluğa yakınlığının belirleyici
+olduğu; (2) çok eklemli/ağır bileşik hareketlerde (deadlift, squat, bench,
+pull-up gibi) daha düşük tekrar (6-10) + göreceli daha yüksek yükün, sinir
+sistemi yorgunluğunu yönetilebilir tutarken kuvvet ve kas kütlesini birlikte
+geliştirdiği; (3) tek eklemli izolasyon ve kablo/dambıl yardımcı
+hareketlerde daha yüksek tekrar (12-15) kullanmanın eklem üzerindeki yükü
+azaltıp hedef kas grubuna daha fazla "time under tension" sağladığı; (4) core
+ve duruş-stabilizasyon hareketlerinde (plank, farmer's carry, dead hang)
+klasik tekrar yerine süre/izometrik tutuşun kas dayanıklılığı ve postür
+kontrolü için daha uygun bir uyaran olduğu. Bu genel prensipler, kullanıcının
+öncelik sırasına (Duruş → Sırt → Göğüs → Omuz) uygun şekilde uygulanmıştır;
+belirli bir akademik kaynağa atıf yapılmamıştır, sadece yaygın antrenman
+bilimi pratiğini yansıtır.
 
 ## Ekipman Envanteri ve Hareket Eşleştirmesi
 
@@ -312,6 +331,24 @@ tarihini (`Hedef: 13 Şub 2027`) ve toplam 96 seanstan kaç tanesinin kaldığı
   hesaplamasıyla aynı mantıkla (`tamamlanan seans sayısı % 4`) "Bu hafta:
   X/4 seans" gösterilir — kayan takvim felsefesiyle tutarlı biçimde,
   haftalar takvim günü değil tamamlanan 4'lü seans grupları olarak sayılır.
+
+## Sürüm 4 Ek Özellikleri
+
+- **Set × tekrar / süre reçeteleri:** Her egzersizin `EXERCISES` tanımına
+  `prescription: { sets, target }` alanı eklendi (ör. `{ sets:4, target:'6-10
+  tekrar' }`). Bugün sekmesinde her egzersiz kartında, hareket adının hemen
+  altında "4 set × 6-10 tekrar" gibi net bir hedef gösterilir. Şemanın
+  gerekçesi için bkz. [Bilimsel Dayanak](#bilimsel-dayanak-set--tekrar-şeması).
+- **Güvenli ilerleme ipucu:** `shouldShowProgressionHint(dayType, exId)`,
+  bir hareketin son 2 tamamlanmış kaydını karşılaştırır; değer aynı kalmış
+  veya artmışsa egzersiz kartında "💡 İlerleme zamanı" rozeti gösterilir.
+  Bu **tamamen görsel bir öneridir** — hiçbir alanı otomatik değiştirmez,
+  kullanıcı yine kendi girer.
+- **Günlük motivasyon sözü:** Bugün sekmesinin en üstünde, 32 cümlelik
+  `MOTIVATION_QUOTES` listesinden güne göre deterministik seçilen (gün
+  sayısı % liste uzunluğu) bir söz gösterilir; aynı gün içinde sabit kalır,
+  ertesi gün değişir. Header'daki hedef tarih / kalan seans sayısı bilgisi
+  (bkz. Sürüm 3) değişmeden aynı şekilde çalışmaya devam eder.
 
 ## Veri Modeli (localStorage, tek anahtar: `protokol_state`)
 
