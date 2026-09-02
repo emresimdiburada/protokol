@@ -599,8 +599,11 @@ function renderHeader(){
   var targetText = blockDaysLeft >= 0
     ? ('Hedef: ' + formatDateShort(state.blockEnd))
     : '6 aylık blok tamamlandı';
+  var dateLabel = state.sessions.length === 0
+    ? ('Program başlangıcı: ' + formatDateTR(state.blockStart))
+    : formatDateTR(today);
   var sub = document.getElementById('headerSub');
-  sub.textContent = formatDateTR(today) + ' · ' + targetText + ' · ' + TOTAL_SESSIONS + ' seanstan ' + remaining + "'si kaldı";
+  sub.textContent = dateLabel + ' · ' + targetText + ' · ' + TOTAL_SESSIONS + ' seanstan ' + remaining + "'si kaldı";
 }
 
 function renderBlockStartCard(){
