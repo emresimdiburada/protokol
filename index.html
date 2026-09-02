@@ -135,6 +135,7 @@
   .grid4{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:12px 0;}
   .qbtn{background:var(--card-2); border:1px solid var(--border); color:#fff; padding:14px 4px; border-radius:12px; font-size:15px;}
   .qbtn:active{background:#232a34;}
+  .qbtn.active{background:var(--accent); border-color:var(--accent); color:#fff;}
   .field{margin-bottom:14px;}
   .field label{display:block; font-size:13px; color:var(--muted); margin-bottom:6px; font-weight:600;}
   .hist-item{border-top:1px solid var(--border); padding:12px 0;}
@@ -237,10 +238,10 @@ var QUICK_PROTEIN = [10, 20, 30, 50];
 
 var BLOCK_LENGTH_DAYS = 168;
 var TOTAL_SESSIONS = 96;
+var DEFAULT_BLOCK_START = '2026-08-29';
 
 function defaultState(){
   var t = todayISO();
-  var start = '2026-08-29';
   return {
     profile: {
       weightKg: 90.5,
@@ -250,8 +251,8 @@ function defaultState(){
       proteinPerKg: 2.2,
       waterGoalBottles: 5
     },
-    blockStart: start,
-    blockEnd: addDays(start, BLOCK_LENGTH_DAYS),
+    blockStart: DEFAULT_BLOCK_START,
+    blockEnd: addDays(DEFAULT_BLOCK_START, BLOCK_LENGTH_DAYS),
     sessions: [],
     measurements: [],
     dailyLogs: {},
@@ -504,18 +505,35 @@ function renderBlockStartCard(){
   }
   var minDate = addDays(todayISO(), -3);
   var maxDate = addDays(todayISO(), 90);
-  // state.blockStart öntanımlı olarak sabit bir takvim tarihidir (bkz.
-  // defaultState()); gerçek zaman ilerledikçe bu sabit tarih min/max
-  // aralığının dışına düşebilir. Input'u her zaman geçerli bir değerle
-  // göstermek için (aksi halde tarayıcı, aralık dışı bir value ile min/max
-  // arasında tutarsız davranabilir) gösterilen değeri aralığa sıkıştırıyoruz;
-  // state.blockStart kullanıcı gerçekten bir tarih seçene kadar değişmez.
-  var displayValue = state.blockStart;
+  // Kullanıcı henüz kendi seçimini yapmadıysa (blockStart hâlâ sabit
+  // varsayılan), input'un value'sunu HER ZAMAN bugünün tarihinden hesapla —
+  // aksi halde native takvim, eski sabit varsayılanın ayında (ör. Ağustos)
+  // açılır, bugünün ayında değil. Kullanıcı bir seçim yaptıysa (chip ya da
+  // takvim ile) o gerçek seçimi göster; yine de aralık dışına düşmüşse
+  // (zaman ilerlediyse) güvenlik amacıyla sıkıştır.
+  var untouched = (state.blockStart === DEFAULT_BLOCK_START);
+  var displayValue = untouched ? todayISO() : state.blockStart;
   if (displayValue < minDate) displayValue = minDate;
   else if (displayValue > maxDate) displayValue = maxDate;
+
+  var chipDefs = [
+    { label: 'Bugün', value: todayISO() },
+    { label: 'Dün', value: addDays(todayISO(), -1) },
+    { label: '2 gün önce', value: addDays(todayISO(), -2) },
+    { label: '3 gün önce', value: addDays(todayISO(), -3) }
+  ];
+  var chipsHtml = '<div class="grid4">' +
+    chipDefs.map(function(c){
+      var isActive = (displayValue === c.value);
+      return '<button class="qbtn' + (isActive ? ' active' : '') + '" onclick="setBlockStart(\'' + c.value + '\')">' + c.label + '</button>';
+    }).join('') +
+  '</div>';
+
   return '<div class="card">' +
     '<div class="card-title">Program Başlangıç Tarihi</div>' +
     '<div class="card-sub">Gün A bu tarihte planlanacak. İlk seansı tamamladıktan sonra bu alan kilitlenir.</div>' +
+    chipsHtml +
+    '<div class="small-muted" style="margin:12px 0 6px;">veya takvimden seç (ileri tarih için):</div>' +
     '<input type="date" id="blockStartInput" value="' + displayValue + '" min="' + minDate + '" max="' + maxDate + '" onchange="setBlockStart(this.value)">' +
   '</div>';
 }
