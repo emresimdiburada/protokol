@@ -367,7 +367,8 @@ function setBlockStart(newVal){
   if (!newVal){ render(); return; }
   var minDate = addDays(todayISO(), -3);
   var maxDate = addDays(todayISO(), 90);
-  if (newVal < minDate || newVal > maxDate){
+  var inRange = (newVal >= minDate) && (newVal <= maxDate);
+  if (!inRange){
     alert('Program başlangıç tarihi bugünden en fazla 3 gün önce veya en fazla 90 gün sonra olabilir.');
     render();
     return;
@@ -502,10 +503,19 @@ function renderBlockStartCard(){
   }
   var minDate = addDays(todayISO(), -3);
   var maxDate = addDays(todayISO(), 90);
+  // state.blockStart öntanımlı olarak sabit bir takvim tarihidir (bkz.
+  // defaultState()); gerçek zaman ilerledikçe bu sabit tarih min/max
+  // aralığının dışına düşebilir. Input'u her zaman geçerli bir değerle
+  // göstermek için (aksi halde tarayıcı, aralık dışı bir value ile min/max
+  // arasında tutarsız davranabilir) gösterilen değeri aralığa sıkıştırıyoruz;
+  // state.blockStart kullanıcı gerçekten bir tarih seçene kadar değişmez.
+  var displayValue = state.blockStart;
+  if (displayValue < minDate) displayValue = minDate;
+  else if (displayValue > maxDate) displayValue = maxDate;
   return '<div class="card">' +
     '<div class="card-title">Program Başlangıç Tarihi</div>' +
     '<div class="card-sub">Gün A bu tarihte planlanacak. İlk seansı tamamladıktan sonra bu alan kilitlenir.</div>' +
-    '<input type="date" id="blockStartInput" value="' + state.blockStart + '" min="' + minDate + '" max="' + maxDate + '" onchange="setBlockStart(this.value)">' +
+    '<input type="date" id="blockStartInput" value="' + displayValue + '" min="' + minDate + '" max="' + maxDate + '" onchange="setBlockStart(this.value)">' +
   '</div>';
 }
 
