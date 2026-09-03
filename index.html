@@ -186,6 +186,19 @@
     font-size:12.5px; color:var(--muted); background:var(--card-2); border:1px solid var(--border);
     border-radius:10px; padding:10px 12px; margin-top:6px; line-height:1.5;
   }
+  .supp-row{
+    display:flex; align-items:center; gap:12px; padding:11px 0;
+    border-top:1px solid var(--border); cursor:pointer;
+  }
+  .supp-row:first-of-type{border-top:none; padding-top:10px;}
+  .supp-check{
+    width:26px; height:26px; border-radius:8px; border:1px solid var(--border);
+    background:var(--card-2); flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    color:#fff; font-weight:800; font-size:15px;
+  }
+  .supp-check.checked{background:var(--success); border-color:var(--success);}
+  .supp-label{font-size:14.5px; font-weight:700; color:#fff;}
+  .supp-note{font-size:12px; color:var(--muted); margin-top:1px;}
 </style>
 </head>
 <body>
@@ -261,6 +274,14 @@ var EXERCISES = {
 
 var QUICK_PROTEIN = [10, 20, 30, 50];
 
+var SUPPLEMENTS = [
+  { id:'whey',      label:'Whey Protein', note:'Antrenman sonrası' },
+  { id:'creatine',  label:'Kreatin',      note:'3-5g' },
+  { id:'magnesium', label:'Magnezyum',    note:'MAG Premium ya da Ocean ExtraMag — sadece biri' },
+  { id:'d3k2',      label:'D3K2',         note:'Damla ya da kapsül — sadece biri' },
+  { id:'collagen',  label:'Kolajen',      note:"Whey yerine değil, ek olarak" }
+];
+
 var BLOCK_LENGTH_DAYS = 168;
 var TOTAL_SESSIONS = 96;
 var DEFAULT_BLOCK_START = '2026-08-29';
@@ -327,7 +348,8 @@ function defaultState(){
     measurements: [],
     dailyLogs: {},
     water: { date: t, bottles: 0 },
-    protein: { date: t, grams: 0, history: [] }
+    protein: { date: t, grams: 0, history: [] },
+    supplements: { date: t, items: {} }
   };
 }
 
@@ -374,7 +396,8 @@ function loadState(){
       measurements: Array.isArray(parsed.measurements) ? parsed.measurements : [],
       dailyLogs: (parsed.dailyLogs && typeof parsed.dailyLogs === 'object') ? parsed.dailyLogs : {},
       water: parsed.water || def.water,
-      protein: parsed.protein || def.protein
+      protein: parsed.protein || def.protein,
+      supplements: parsed.supplements || def.supplements
     };
   } catch(e){
     return def;
@@ -386,6 +409,7 @@ function syncTodayLog(){
   state.dailyLogs[t] = state.dailyLogs[t] || {};
   state.dailyLogs[t].waterBottles = state.water.bottles;
   state.dailyLogs[t].proteinGrams = state.protein.grams;
+  state.dailyLogs[t].supplements = Object.assign({}, state.supplements.items);
 }
 
 function saveState(){
@@ -408,6 +432,13 @@ function normalizeDaily(){
     state.dailyLogs[oldProteinDate] = state.dailyLogs[oldProteinDate] || {};
     state.dailyLogs[oldProteinDate].proteinGrams = state.protein.grams;
     state.protein = { date: t, grams: 0, history: [] };
+    changed = true;
+  }
+  if (state.supplements.date !== t){
+    var oldSupplementsDate = state.supplements.date;
+    state.dailyLogs[oldSupplementsDate] = state.dailyLogs[oldSupplementsDate] || {};
+    state.dailyLogs[oldSupplementsDate].supplements = Object.assign({}, state.supplements.items);
+    state.supplements = { date: t, items: {} };
     changed = true;
   }
   if (changed) saveState();
@@ -865,15 +896,28 @@ function renderProtein(){
     '</div>' +
   '</div>';
 
+  var suppItems = state.supplements.items;
+  var suppTakenCount = SUPPLEMENTS.filter(function(s){ return !!suppItems[s.id]; }).length;
   html += '<div class="card">' +
-    '<div class="card-title">Takviye Notu</div>' +
-    '<div class="card-sub" style="margin-bottom:0;">Antrenman sonrası whey + günde 3-5g kreatin. ' +
-    'Magnezyum ürünlerinden (MAG Premium / Ocean ExtraMag) sadece biri kullanılmalı, ikisi birlikte değil. ' +
-    'D3K2 sadece damla veya kapsül formundan biriyle alınmalı. Kolajen, whey\'in yerine değil ek olarak düşünülmeli. ' +
-    'Detaylar için PROTOKOL_SPEC.md · Beslenme bölümüne bakın.</div>' +
+    '<div class="card-title">Bugünkü Takviyeler</div>' +
+    '<div class="card-sub">' + suppTakenCount + '/' + SUPPLEMENTS.length + ' takviye alındı</div>' +
+    SUPPLEMENTS.map(function(s){
+      var checked = !!suppItems[s.id];
+      return '<div class="supp-row" onclick="toggleSupplement(\'' + s.id + '\')">' +
+        '<div class="supp-check' + (checked ? ' checked' : '') + '">' + (checked ? '✓' : '') + '</div>' +
+        '<div><div class="supp-label">' + s.label + '</div><div class="supp-note">' + s.note + '</div></div>' +
+      '</div>';
+    }).join('') +
+    '<div class="small-muted" style="margin-top:10px;">Detaylar için PROTOKOL_SPEC.md · Beslenme bölümüne bakın.</div>' +
   '</div>';
 
   return html;
+}
+
+function toggleSupplement(id){
+  state.supplements.items[id] = !state.supplements.items[id];
+  saveState();
+  render();
 }
 
 function addProtein(g){
@@ -907,6 +951,16 @@ function resetProtein(){
   }
 }
 
+function hasAnySupplementTaken(items){
+  return !!(items && SUPPLEMENTS.some(function(s){ return items[s.id]; }));
+}
+
+function supplementSummaryText(items){
+  if (!hasAnySupplementTaken(items)) return null;
+  var takenLabels = SUPPLEMENTS.filter(function(s){ return items[s.id]; }).map(function(s){ return s.label; });
+  return '💊 ' + takenLabels.join(', ') + ' (' + takenLabels.length + '/' + SUPPLEMENTS.length + ')';
+}
+
 function renderHistory(){
   var dateSet = {};
   state.sessions.forEach(function(s){ dateSet[s.date] = true; });
@@ -915,12 +969,12 @@ function renderHistory(){
   var dates = Object.keys(dateSet).sort().reverse().filter(function(d){
     var hasSession = state.sessions.some(function(s){ return s.date === d; });
     var log = state.dailyLogs[d];
-    var hasLog = !!(log && (log.waterBottles || log.proteinGrams));
+    var hasLog = !!(log && (log.waterBottles || log.proteinGrams || hasAnySupplementTaken(log.supplements)));
     return hasSession || hasLog;
   });
 
   if (dates.length === 0){
-    return '<div class="card"><div class="empty">Henüz kayıt yok.<br>İlk seansını "Bugün" sekmesinden tamamla ya da su/protein ekle.</div></div>';
+    return '<div class="card"><div class="empty">Henüz kayıt yok.<br>İlk seansını "Bugün" sekmesinden tamamla ya da su/protein/takviye ekle.</div></div>';
   }
 
   var html = '<div class="card"><div class="card-title">Geçmiş</div>';
@@ -957,10 +1011,12 @@ function renderHistory(){
       }
     });
 
-    if (log && (log.waterBottles || log.proteinGrams)){
+    if (log && (log.waterBottles || log.proteinGrams || hasAnySupplementTaken(log.supplements))){
       var parts = [];
       if (log.waterBottles){ parts.push('💧 ' + log.waterBottles + ' şişe (' + (log.waterBottles * 700) + 'ml)'); }
       if (log.proteinGrams){ parts.push('🍗 ' + log.proteinGrams + 'g protein'); }
+      var suppSummary = supplementSummaryText(log.supplements);
+      if (suppSummary){ parts.push(suppSummary); }
       html += '<div class="hist-ex" style="margin-top:' + (sessionsForDate.length ? '8px' : '0') + ';">' + parts.join(' &nbsp;·&nbsp; ') + '</div>';
     }
 
