@@ -1,1 +1,3 @@
 screenshots/
+.sim-storage-state.json
+.sim-meta.json
