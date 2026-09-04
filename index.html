@@ -46,13 +46,24 @@
   .badge.phase1{color:#93c5fd; border-color:#1d3a63;}
   .badge.phase2{color:#fca5a5; border-color:#5b2323;}
   .subrow{margin-top:6px; font-size:12px; color:var(--muted);}
+  .header-progress{height:4px; border-radius:999px; background:var(--card-2); margin-top:10px; overflow:hidden;}
+  .header-progress-fill{height:100%; background:linear-gradient(90deg,var(--accent),var(--accent-2)); border-radius:999px; transition:width .25s ease;}
   main{padding:16px; max-width:520px; margin:0 auto;}
   .card{
     background:var(--card); border:1px solid var(--border); border-radius:16px;
     padding:16px; margin-bottom:14px;
+    border-top-width:1px; border-top-style:solid;
   }
-  .card-title{font-size:15px; font-weight:700; color:#fff; margin-bottom:4px;}
+  .card-title{font-size:15px; font-weight:700; color:#fff; margin-bottom:4px; display:flex; align-items:center; gap:7px;}
   .card-sub{font-size:13px; color:var(--muted); margin-bottom:10px;}
+  .card-accent-blue{border-top-color:var(--accent); border-top-width:3px;}
+  .card-accent-cyan{border-top-color:#22d3ee; border-top-width:3px;}
+  .card-accent-amber{border-top-color:var(--warn); border-top-width:3px;}
+  .card-accent-green{border-top-color:var(--success); border-top-width:3px;}
+  .card-danger-zone{
+    border-color:#5b2323; border-top-color:var(--danger); border-top-width:3px;
+    background:linear-gradient(180deg, rgba(239,68,68,0.06), var(--card) 60%);
+  }
   .banner{
     background:linear-gradient(135deg,#1d2b45,#241a3a); border:1px solid #3b4c78;
     border-radius:16px; padding:14px 16px; margin-bottom:14px;
@@ -82,6 +93,7 @@
   }
   .ex-prescription{font-size:12.5px; color:var(--accent-2); font-weight:700; margin-top:3px;}
   .ex-prev{font-size:12.5px; color:var(--muted); margin-top:2px;}
+  .ex-done-badge{font-size:11px; font-weight:800; color:var(--success); margin-left:8px; white-space:nowrap;}
   .hint-badge{
     font-size:12px; font-weight:700; color:#fbbf24; background:rgba(245,158,11,0.12);
     border:1px solid rgba(245,158,11,0.35); padding:5px 9px; border-radius:8px;
@@ -119,6 +131,12 @@
     min-height:52px; font-size:16px; margin-top:6px;
   }
   .btn-primary:active{background:#2f68d1;}
+  .btn-primary-soft{
+    width:100%; background:rgba(59,130,246,0.14); color:var(--accent-2);
+    border:1px solid rgba(59,130,246,0.4); padding:14px;
+    min-height:48px; font-size:15px; margin-top:6px;
+  }
+  .btn-primary-soft:active{background:rgba(59,130,246,0.22);}
   .btn-secondary{
     background:var(--card-2); color:var(--text); border:1px solid var(--border);
     padding:12px; min-height:48px;
@@ -154,7 +172,8 @@
   .hist-day{font-size:15px; font-weight:800; color:#fff; margin-top:2px;}
   .hist-ex{font-size:13px; color:var(--muted); margin-top:6px; line-height:1.6;}
   .hist-ex b{color:var(--text); font-weight:600;}
-  .empty{color:var(--muted); font-size:14px; text-align:center; padding:26px 0;}
+  .empty{color:var(--muted); font-size:14px; text-align:center; padding:26px 0; line-height:1.6;}
+  .empty-icon{font-size:30px; display:block; margin-bottom:10px;}
   .tabbar{
     position:fixed; bottom:0; left:0; right:0; z-index:20;
     display:flex; background:rgba(20,24,29,0.96); backdrop-filter:blur(10px);
@@ -204,6 +223,11 @@
     border-top:1px solid var(--border);
   }
   .warmup-step:first-of-type{border-top:none; padding-top:2px;}
+  .warmup-toggle{
+    display:flex; align-items:center; justify-content:space-between; cursor:pointer;
+  }
+  .warmup-summary{font-size:13px; color:var(--muted); margin-top:2px;}
+  .warmup-chevron{font-size:12px; color:var(--muted); font-weight:700; flex-shrink:0; margin-left:10px;}
 </style>
 </head>
 <body>
@@ -214,6 +238,7 @@
     <div id="phaseBadge" class="badge">-</div>
   </div>
   <div class="subrow" id="headerSub">-</div>
+  <div class="header-progress"><div class="header-progress-fill" id="headerProgressFill" style="width:0%"></div></div>
 </div>
 
 <main id="main"></main>
@@ -604,15 +629,23 @@ function saveMeasurement(){
 
 var activeTab = 'today';
 var selectedDayPreview = null;
+var warmupExpanded = false;
+var pendingExerciseValues = {};
 function setTab(t){
   activeTab = t;
   selectedDayPreview = null;
+  warmupExpanded = false;
   render();
   window.scrollTo(0,0);
 }
 
 function selectDayTab(dayType){
   selectedDayPreview = dayType;
+  render();
+}
+
+function toggleWarmup(){
+  warmupExpanded = !warmupExpanded;
   render();
 }
 
@@ -652,13 +685,16 @@ function renderHeader(){
     : formatDateTR(today);
   var sub = document.getElementById('headerSub');
   sub.textContent = dateLabel + ' · ' + targetText + ' · ' + TOTAL_SESSIONS + ' seanstan ' + remaining + "'si kaldı";
+
+  var progressPct = Math.min(100, Math.round(getCompletedCount() / TOTAL_SESSIONS * 100));
+  document.getElementById('headerProgressFill').style.width = progressPct + '%';
 }
 
 function renderBlockStartCard(){
   var locked = state.sessions.length > 0;
   if (locked){
     return '<div class="card">' +
-      '<div class="card-title">Program Başlangıcı</div>' +
+      '<div class="card-title">🗓️ Program Başlangıcı</div>' +
       '<div class="card-sub" style="margin-bottom:0;">Program başlangıcı: ' + formatDateTR(state.blockStart) + ' (kilitli — kayan takvim artık son tamamlanan seansa göre ilerliyor)</div>' +
     '</div>';
   }
@@ -676,7 +712,7 @@ function renderBlockStartCard(){
   else if (displayValue > maxDate) displayValue = maxDate;
 
   return '<div class="card">' +
-    '<div class="card-title">Program Başlangıç Tarihi</div>' +
+    '<div class="card-title">🗓️ Program Başlangıç Tarihi</div>' +
     '<div class="card-sub">Gün A bu tarihte planlanacak. İlk seansı tamamladıktan sonra bu alan kilitlenir.</div>' +
     '<input type="date" id="blockStartInput" value="' + displayValue + '" min="' + minDate + '" max="' + maxDate + '" onchange="setBlockStart(this.value)">' +
   '</div>';
@@ -739,10 +775,17 @@ function renderToday(){
       '</div>';
   }
 
+  var warmupFirstExName = EXERCISES[displayDayType][0].name;
   var warmupLines = WARMUP_GENERAL_STEPS.concat([WARMUP_RAMPUP[displayDayType]]);
-  html += '<div class="card">' +
-    '<div class="card-title">🔥 Isınma (~8-10 dk)</div>' +
-    warmupLines.map(function(line, i){ return '<div class="warmup-step">' + (i+1) + '. ' + line + '</div>'; }).join('') +
+  html += '<div class="card card-accent-amber">' +
+    '<div class="warmup-toggle" onclick="toggleWarmup()">' +
+      '<div>' +
+        '<div class="card-title" style="margin-bottom:0;">🔥 Isınma (~8-10 dk)</div>' +
+        (warmupExpanded ? '' : '<div class="warmup-summary">Kardiyo + mobilite + ' + warmupFirstExName + ' ısınma seti</div>') +
+      '</div>' +
+      '<span class="warmup-chevron">' + (warmupExpanded ? 'Gizle ▲' : 'Detaylar ▼') + '</span>' +
+    '</div>' +
+    (warmupExpanded ? warmupLines.map(function(line, i){ return '<div class="warmup-step">' + (i+1) + '. ' + line + '</div>'; }).join('') : '') +
   '</div>';
 
   html += '<div class="card">';
@@ -767,9 +810,20 @@ function renderToday(){
         : '💡 İlerleme zamanı — bu sefer biraz daha ağırlık dene';
       hintHtml = '<div class="hint-badge">' + hintText + '</div>';
     }
+    var pendingVal = pendingExerciseValues[ex.id] !== undefined ? pendingExerciseValues[ex.id] : '';
+    var doneDisplay = pendingVal !== '' ? 'inline' : 'none';
+    var diffHtml = (prevVal !== null ? '±0' : '');
+    var diffClass = 'ex-diff zero';
+    if (pendingVal !== '' && prevVal !== null){
+      var diffVal = Math.round((parseFloat(pendingVal) - prevVal) * 100) / 100;
+      if (diffVal > 0){ diffHtml = '▲ +' + diffVal; diffClass = 'ex-diff pos'; }
+      else if (diffVal < 0){ diffHtml = '▼ ' + diffVal; diffClass = 'ex-diff neg'; }
+      else { diffHtml = '± 0'; diffClass = 'ex-diff zero'; }
+    }
     html += '<div class="exercise">' +
       '<div class="ex-top">' +
         '<div><span class="ex-name">' + ex.name + '</span><span class="unit-pill">' + unitLabel(ex.unit) + '</span>' +
+        '<span class="ex-done-badge" id="ex_done_' + ex.id + '" style="display:' + doneDisplay + ';">✓ kaydedildi</span>' +
         '<div class="ex-prescription">' + ex.prescription.sets + ' set × ' + ex.prescription.target + '</div>' +
         '<div class="ex-prev">' + (prevVal !== null ? 'Önceki: ' + prevVal + ' ' + unitLabel(ex.unit) : 'Önceki kayıt yok') + '</div>' +
         hintHtml +
@@ -778,8 +832,8 @@ function renderToday(){
       '</div>' +
       '<div class="ex-input-row">' +
         '<input type="number" inputmode="decimal" step="0.5" min="0" placeholder="' + unitLabel(ex.unit) + '" ' +
-          'id="ex_input_' + ex.id + '" data-exid="' + ex.id + '" data-prev="' + (prevVal !== null ? prevVal : '') + '">' +
-        '<span class="ex-diff zero" id="ex_diff_' + ex.id + '">' + (prevVal !== null ? '±0' : '') + '</span>' +
+          'id="ex_input_' + ex.id + '" data-exid="' + ex.id + '" data-prev="' + (prevVal !== null ? prevVal : '') + '" value="' + pendingVal + '">' +
+        '<span class="' + diffClass + '" id="ex_diff_' + ex.id + '">' + diffHtml + '</span>' +
       '</div>' +
     '</div>';
   });
@@ -798,8 +852,8 @@ function renderToday(){
       lastSession.dayType + ' · ' + formatDateTR(lastSession.date) + ')</button>';
   }
 
-  html += '<div class="card">' +
-    '<div class="card-title">İlerleme</div>' +
+  html += '<div class="card card-accent-blue">' +
+    '<div class="card-title">📈 İlerleme</div>' +
     '<div class="card-sub">Tamamlanan seans: ' + getCompletedCount() + ' · Şu anki hafta: ' + getCurrentWeek() + '/24</div>' +
     '<div class="progress-track"><div class="progress-fill" style="width:' + Math.min(100, Math.round(getCompletedCount()/TOTAL_SESSIONS*100)) + '%"></div></div>' +
     '<div class="card-sub" style="margin-top:8px; margin-bottom:0;">Bu hafta: ' + getSessionsThisWeek() + '/4 seans</div>' +
@@ -813,6 +867,9 @@ function attachExerciseInputListeners(){
     inp.addEventListener('input', function(){
       var exid = inp.getAttribute('data-exid');
       var prevRaw = inp.getAttribute('data-prev');
+      pendingExerciseValues[exid] = inp.value;
+      var doneEl = document.getElementById('ex_done_' + exid);
+      if (doneEl) doneEl.style.display = (inp.value !== '') ? 'inline' : 'none';
       var diffEl = document.getElementById('ex_diff_' + exid);
       if (!diffEl) return;
       if (prevRaw === '' || inp.value === ''){
@@ -841,6 +898,7 @@ function completeSession(dayType){
   if (Object.keys(exercises).length === 0){
     if (!confirm('Hiç egzersiz girmedin. Yine de seansı boş olarak tamamlamak istiyor musun?')) return;
   }
+  exList.forEach(function(ex){ delete pendingExerciseValues[ex.id]; });
   state.sessions.push({ date: todayISO(), dayType: dayType, exercises: exercises });
   selectedDayPreview = null;
   saveState();
@@ -854,8 +912,8 @@ function renderWater(){
   var goalMl = goal * 700;
   var pct = goalMl > 0 ? Math.min(100, Math.round(ml / goalMl * 100)) : 0;
 
-  var html = '<div class="card">' +
-    '<div class="card-title">Bugünkü Su Tüketimi</div>' +
+  var html = '<div class="card card-accent-cyan">' +
+    '<div class="card-title">💧 Bugünkü Su Tüketimi</div>' +
     '<div class="card-sub">700ml\'lik şişe bazında takip</div>' +
     '<div class="counter-row">' +
       '<button class="counter-btn" onclick="removeBottle()">–</button>' +
@@ -867,7 +925,7 @@ function renderWater(){
   '</div>';
 
   html += '<div class="card">' +
-    '<div class="card-title">Günlük Hedef</div>' +
+    '<div class="card-title">🎯 Günlük Hedef</div>' +
     '<div class="field" style="margin-bottom:0;">' +
       '<label>Hedef şişe sayısı (700ml)</label>' +
       '<input type="number" inputmode="numeric" min="1" step="1" value="' + goal + '" onchange="updateWaterGoal(this.value)">' +
@@ -894,8 +952,8 @@ function renderProtein(){
     ? 'Faz 1 · Recomp — hafif kalori açığı + yüksek protein (%' + state.profile.bodyFatPct + ' → hedef ~%16-17 vücut yağı)'
     : 'Faz 2 · Lean Bulk — tanımın üzerine kas ekleme, kalori dengeye/hafif fazlaya çekilir';
 
-  var html = '<div class="card">' +
-    '<div class="card-title">Bugünkü Protein</div>' +
+  var html = '<div class="card card-accent-amber">' +
+    '<div class="card-title">🍗 Bugünkü Protein</div>' +
     '<div class="card-sub">' + phaseText + '</div>' +
     '<div class="counter-row" style="margin:10px 0;">' +
       '<div class="counter-value" style="min-width:180px;">' + p.grams + ' / ' + target + 'g</div>' +
@@ -905,7 +963,7 @@ function renderProtein(){
   '</div>';
 
   html += '<div class="card">' +
-    '<div class="card-title">Hızlı Ekle</div>' +
+    '<div class="card-title">➕ Hızlı Ekle</div>' +
     '<div class="grid4">' +
       QUICK_PROTEIN.map(function(g){ return '<button class="qbtn" onclick="addProtein(' + g + ')">+' + g + 'g</button>'; }).join('') +
     '</div>' +
@@ -921,8 +979,8 @@ function renderProtein(){
 
   var suppItems = state.supplements.items;
   var suppTakenCount = SUPPLEMENTS.filter(function(s){ return !!suppItems[s.id]; }).length;
-  html += '<div class="card">' +
-    '<div class="card-title">Bugünkü Takviyeler</div>' +
+  html += '<div class="card card-accent-green">' +
+    '<div class="card-title">💊 Bugünkü Takviyeler</div>' +
     '<div class="card-sub">' + suppTakenCount + '/' + SUPPLEMENTS.length + ' takviye alındı</div>' +
     SUPPLEMENTS.map(function(s){
       var checked = !!suppItems[s.id];
@@ -997,10 +1055,10 @@ function renderHistory(){
   });
 
   if (dates.length === 0){
-    return '<div class="card"><div class="empty">Henüz kayıt yok.<br>İlk seansını "Bugün" sekmesinden tamamla ya da su/protein/takviye ekle.</div></div>';
+    return '<div class="card"><div class="empty"><span class="empty-icon">📋</span>Henüz kayıt yok — ama başlangıç da bir başarıdır.<br>İlk seansını "Bugün" sekmesinden tamamla ya da su/protein/takviye ekle, buradan takip edeceğiz.</div></div>';
   }
 
-  var html = '<div class="card"><div class="card-title">Geçmiş</div>';
+  var html = '<div class="card"><div class="card-title">🗂️ Geçmiş</div>';
 
   if (state.sessions.length > 0){
     var lastSession = state.sessions[state.sessions.length - 1];
@@ -1082,7 +1140,7 @@ function renderMeasurementList(){
 function renderSettings(){
   var pr = state.profile;
   var html = '<div class="card">' +
-    '<div class="card-title">Profil</div>' +
+    '<div class="card-title">👤 Profil</div>' +
     '<div class="card-sub">Ölçüm geçmişine kayıt eklemek için aşağıdaki "Yeni Ölçüm Ekle" bölümünü kullan.</div>' +
     '<div class="field"><label>Vücut Ağırlığı (kg)</label><input type="number" inputmode="decimal" step="0.1" id="set_weight" value="' + pr.weightKg + '"></div>' +
     '<div class="field"><label>Boy (cm)</label><input type="number" inputmode="decimal" step="1" id="set_height" value="' + pr.heightCm + '"></div>' +
@@ -1090,11 +1148,11 @@ function renderSettings(){
     '<div class="field"><label>Vücut Yaşı</label><input type="number" inputmode="numeric" step="1" id="set_bodyage" value="' + pr.bodyAge + '"></div>' +
     '<div class="field"><label>Protein Çarpanı (g/kg)</label><input type="number" inputmode="decimal" step="0.1" id="set_protein_mult" value="' + pr.proteinPerKg + '"></div>' +
     '<div class="field" style="margin-bottom:6px;"><label>Su Hedefi (şişe / 700ml)</label><input type="number" inputmode="numeric" step="1" id="set_water_goal" value="' + pr.waterGoalBottles + '"></div>' +
-    '<button class="btn-primary" onclick="saveSettings()">Kaydet</button>' +
+    '<button class="btn-primary-soft" onclick="saveSettings()">Kaydet</button>' +
   '</div>';
 
   html += '<div class="card">' +
-    '<div class="card-title">Yedekleme</div>' +
+    '<div class="card-title">💾 Yedekleme</div>' +
     '<div class="card-sub">Verilerin sadece bu telefonda saklanıyor. Telefon değiştirirsen veya Safari verisini silersen kaybolur — düzenli yedek al.</div>' +
     '<div class="grid2">' +
       '<button class="btn-secondary" onclick="downloadBackup()">⬇ Yedeği İndir</button>' +
@@ -1104,24 +1162,24 @@ function renderSettings(){
   '</div>';
 
   html += '<div class="card">' +
-    '<div class="card-title">Yeni Ölçüm Ekle</div>' +
+    '<div class="card-title">📏 Yeni Ölçüm Ekle</div>' +
     '<div class="card-sub">Güncel ölçümünü gir; hem profilin hem ölçüm geçmişin güncellenir.</div>' +
     '<div class="field"><label>Kilo (kg)</label><input type="number" inputmode="decimal" step="0.1" id="meas_weight" value="' + pr.weightKg + '"></div>' +
     '<div class="field"><label>Vücut Yağı (%)</label><input type="number" inputmode="decimal" step="0.1" id="meas_bodyfat" value="' + pr.bodyFatPct + '"></div>' +
     '<div class="field" style="margin-bottom:6px;"><label>Vücut Yaşı</label><input type="number" inputmode="numeric" step="1" id="meas_bodyage" value="' + pr.bodyAge + '"></div>' +
-    '<button class="btn-primary" onclick="saveMeasurement()">Ölçümü Kaydet</button>' +
+    '<button class="btn-primary-soft" onclick="saveMeasurement()">Ölçümü Kaydet</button>' +
     '<div style="margin-top:14px;">' + renderMeasurementList() + '</div>' +
   '</div>';
 
   html += renderBlockStartCard();
 
   html += '<div class="card">' +
-    '<div class="card-title">Program</div>' +
+    '<div class="card-title">📊 Program</div>' +
     '<div class="card-sub" style="margin-bottom:0;">Blok: ' + formatDateTR(state.blockStart) + ' – ' + formatDateTR(state.blockEnd) + '<br>Tamamlanan seans: ' + getCompletedCount() + ' · Hafta ' + getCurrentWeek() + '/24 · Faz ' + getPhase() + '</div>' +
   '</div>';
 
-  html += '<div class="card">' +
-    '<div class="card-title">Tehlikeli Bölge</div>' +
+  html += '<div class="card card-danger-zone">' +
+    '<div class="card-title">⚠️ Tehlikeli Bölge</div>' +
     '<div class="card-sub">Tüm seans geçmişi, su ve protein kayıtları silinir. Bu işlem geri alınamaz.</div>' +
     '<button class="btn-danger" onclick="resetAllData()">Verileri Sıfırla</button>' +
   '</div>';
@@ -1205,6 +1263,7 @@ function resetAllData(){
       state = defaultState();
       saveState();
       activeTab = 'today';
+      pendingExerciseValues = {};
       render();
     }
   }
