@@ -72,6 +72,8 @@
   .banner p{font-size:13px; color:#c7d2fe; margin-top:4px; line-height:1.5;}
   .banner.due{background:linear-gradient(135deg,#3a1d1d,#331515); border-color:#7a2f2f;}
   .banner.due p{color:#fecaca;}
+  .banner.success{background:linear-gradient(135deg,#12351f,#0f2a1c); border-color:#1d4a2c;}
+  .banner.success p{color:#bbf7d0;}
   .row-between{display:flex; align-items:center; justify-content:space-between; gap:10px;}
   .pill{
     display:inline-block; font-size:11px; font-weight:800; padding:3px 8px;
@@ -551,8 +553,14 @@ function getLastNValuesForExercise(dayType, exId, n){
 }
 
 function shouldShowProgressionHint(dayType, exId){
-  var lastTwo = getLastNValuesForExercise(dayType, exId, 2);
-  return lastTwo.length === 2 && lastTwo[1] >= lastTwo[0];
+  // Requires two REAL consecutive increases across the last 3 sessions
+  // (strict <, not <=) -- "non-decreasing over 2" fired on nearly every
+  // exercise every session for a consistently-progressing user, since
+  // flat-or-up is the normal case over months, not a rare signal worth
+  // a nudge. Needing sustained momentum makes it fire rarely enough to
+  // still mean something. See ux-friction-report.md finding #2.
+  var lastThree = getLastNValuesForExercise(dayType, exId, 3);
+  return lastThree.length === 3 && lastThree[0] < lastThree[1] && lastThree[1] < lastThree[2];
 }
 
 function setBlockStart(newVal){
@@ -579,6 +587,7 @@ function undoLastSession(){
   if (!confirm('Son tamamlanan seansı (Gün ' + last.dayType + ' · ' + formatDateTR(last.date) + ') geri almak istiyor musun?')) return;
   state.sessions.pop();
   selectedDayPreview = null;
+  sessionCompleteUntil = 0;
   saveState();
   render();
 }
@@ -653,6 +662,8 @@ var selectedDayPreview = null;
 var warmupExpanded = false;
 var pendingExerciseValues = {};
 var savedFlashUntil = { settings: 0, measurement: 0 };
+var sessionCompleteUntil = 0;
+var lastCompletedDayType = null;
 function setTab(t){
   activeTab = t;
   selectedDayPreview = null;
@@ -754,6 +765,13 @@ function renderToday(){
   }
 
   var html = '';
+
+  if (Date.now() < sessionCompleteUntil && lastCompletedDayType){
+    html += '<div class="banner success">' +
+      '<b>✓ Seans tamamlandı!</b>' +
+      '<p>Gün ' + lastCompletedDayType + ' kaydedildi.</p>' +
+    '</div>';
+  }
 
   html += '<div class="quote-banner">“' + todaysMotivationQuote() + '”</div>';
 
@@ -904,7 +922,17 @@ function attachExerciseInputListeners(){
 }
 
 function completeSession(dayType){
-  if (dayType !== getNextSession().dayType) return;
+  var next = getNextSession();
+  if (dayType !== next.dayType) return;
+
+  var delta = daysBetween(next.dueDate, todayISO());
+  if (delta < 0){
+    var earlyMsg = 'Bu antrenman henüz sırası gelmedi — planlanan tarih ' + formatDateTR(next.dueDate) +
+      ' (' + Math.abs(delta) + ' gün sonra). Şimdi tamamlarsan kayan takvimdeki SIRADAKİ TÜM tarihler ' +
+      'buna göre kayar. Yine de tamamlamak istiyor musun?';
+    if (!confirm(earlyMsg)) return;
+  }
+
   var exList = EXERCISES[dayType];
   var exercises = {};
   exList.forEach(function(ex){
@@ -919,8 +947,12 @@ function completeSession(dayType){
   exList.forEach(function(ex){ delete pendingExerciseValues[ex.id]; });
   state.sessions.push({ date: todayISO(), dayType: dayType, exercises: exercises });
   selectedDayPreview = null;
+  lastCompletedDayType = dayType;
+  sessionCompleteUntil = Date.now() + 2500;
   saveState();
   render();
+  window.scrollTo(0, 0);
+  setTimeout(render, 2550);
 }
 
 function renderWater(){
@@ -1309,6 +1341,7 @@ function resetAllData(){
       activeTab = 'today';
       pendingExerciseValues = {};
       savedFlashUntil = { settings: 0, measurement: 0 };
+      sessionCompleteUntil = 0;
       render();
     }
   }
