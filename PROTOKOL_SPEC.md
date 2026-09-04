@@ -374,6 +374,54 @@ tarihini (`Hedef: 13 Şub 2027`) ve toplam 96 seanstan kaç tanesinin kaldığı
   ertesi gün değişir. Header'daki hedef tarih / kalan seans sayısı bilgisi
   (bkz. Sürüm 3) değişmeden aynı şekilde çalışmaya devam eder.
 
+## Sürüm 5 Ek Özellikleri — Görsel/Kullanılabilirlik Geçişi
+
+Kullanıcının "görsel ve kullanılabilirlik açısından yetersiz" geri
+bildirimi üzerine yapılan tasarım geçişi. Tüm kurallar
+`.claude/skills/protokol-tasarim/SKILL.md` içinde kalıcı olarak
+tanımlı; buradaki liste sadece neyin, neden değiştiğinin özeti.
+
+- **Kart aksan sistemi + ikon kuralı:** Önceden tüm kartlar aynı gri
+  kutu görünümündeydi, hiçbiri öne çıkmıyordu. Artık her kart
+  kategorisine göre 3px'lik renkli bir üst kenarlık taşıyor
+  (`.card-accent-blue/cyan/amber/green`) ve `card-title` bir emoji ile
+  başlıyor (💧 su, 🍗 protein, 💊 takviye, 🔥 ısınma, 📈 ilerleme, ⚠️
+  tehlike, vb.) — nötr/bilgi kartları (Profil, Yedekleme gibi) bilerek
+  aksansız bırakıldı.
+- **Header'da her zaman görünen ilerleme çubuğu:** Program ilerlemesi
+  (tamamlanan/96 seans) artık sadece Bugün sekmesinin en altındaki
+  kartta değil, sticky header'da ince bir çubukla (`#headerProgressFill`)
+  her sekmede görünüyor.
+- **Isınma kartı katlanabilir oldu:** Her gün aynı kalan 3 paragraflık
+  talimat artık varsayılan olarak kapalı; tek satır özet ("Kardiyo +
+  mobilite + [ilk hareket] ısınma seti") + "Detaylar ▼" ile açılıyor
+  (`warmupExpanded` state'i, `toggleWarmup()`).
+- **Egzersiz satırlarında tamamlanma rozeti:** Bir egzersize değer
+  girildiğinde hareket adının yanında "✓ kaydedildi" rozeti (`.ex-done-badge`)
+  beliriyor — antrenman ortasında hangi hareketin kaydedildiğini görmek
+  için artık her input'u tek tek okumak gerekmiyor.
+- **Buton hiyerarşisi:** "Kaydet" / "Ölçümü Kaydet" gibi rutin kaydetme
+  butonları yeni `.btn-primary-soft` stiline (yarı saydam mavi, ince
+  kenarlık) geçirildi; dolu/doygun `.btn-primary` artık sadece
+  uygulamanın tek gerçek birincil eylemi olan "Seansı Tamamla" için
+  kullanılıyor.
+- **Tehlikeli Bölge görsel olarak ayrıştı:** Ayarlar → Tehlikeli Bölge
+  kartı artık `.card-danger-zone` ile kırmızı üst kenarlık + hafif
+  kırmızı gradient arka plan taşıyor, diğer ayar kartlarıyla
+  karıştırılmıyor.
+- **Daha sıcak boş durum metni:** Geçmiş sekmesi boşken artık kuru
+  "Henüz kayıt yok" yerine kısa, motivasyonel bir cümle + ikon
+  (`.empty-icon`) gösteriyor.
+- **Bug fix — `render()` egzersiz input'larını siliyordu:** Uygulamada
+  React benzeri bir diffing yok, her ekran `innerHTML` ile baştan
+  çiziliyor. Isınma detayını aç/kapa gibi `render()` tetikleyen yeni
+  bir eylem eklenince, kullanıcı henüz "Seansı Tamamla"ya basmadan
+  yazdığı egzersiz ağırlıkları sessizce siliniyordu (aynı sorun gün
+  sekmesi önizlemesinde de zaten vardı, fark edilmemişti). Artık yazılan
+  değerler sayfa içi `pendingExerciseValues` objesinde tutulup her
+  render'da input'a geri yazılıyor; sadece `completeSession()`
+  tamamlandığında o günün girişleri temizleniyor.
+
 ## Veri Modeli (localStorage, tek anahtar: `protokol_state`)
 
 ```json
