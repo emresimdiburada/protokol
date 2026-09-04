@@ -228,6 +228,23 @@
   }
   .warmup-summary{font-size:13px; color:var(--muted); margin-top:2px;}
   .warmup-chevron{font-size:12px; color:var(--muted); font-weight:700; flex-shrink:0; margin-left:10px;}
+  .section-eyebrow{
+    font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase;
+    letter-spacing:0.6px; margin:22px 2px 8px;
+  }
+  .section-eyebrow:first-child{margin-top:4px;}
+  .readonly-stats{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:10px;}
+  .readonly-stat{
+    background:var(--card-2); border:1px solid var(--border); border-radius:12px;
+    padding:10px 8px; text-align:center;
+  }
+  .readonly-label{display:block; font-size:11px; color:var(--muted); margin-bottom:4px;}
+  .readonly-value{display:block; font-size:16px; font-weight:800; color:#fff;}
+  .backup-status{font-size:12px; font-weight:700; margin-bottom:10px; color:var(--success);}
+  .backup-status.warn{color:var(--warn);}
+  .btn-primary-soft.saved-flash{
+    background:rgba(34,197,94,0.18); color:var(--success); border-color:rgba(34,197,94,0.45);
+  }
 </style>
 </head>
 <body>
@@ -391,7 +408,8 @@ function defaultState(){
     dailyLogs: {},
     water: { date: t, bottles: 0 },
     protein: { date: t, grams: 0, history: [] },
-    supplements: { date: t, items: {} }
+    supplements: { date: t, items: {} },
+    lastBackupAt: null
   };
 }
 
@@ -439,7 +457,8 @@ function loadState(){
       dailyLogs: (parsed.dailyLogs && typeof parsed.dailyLogs === 'object') ? parsed.dailyLogs : {},
       water: parsed.water || def.water,
       protein: parsed.protein || def.protein,
-      supplements: parsed.supplements || def.supplements
+      supplements: parsed.supplements || def.supplements,
+      lastBackupAt: parsed.lastBackupAt || null
     };
   } catch(e){
     return def;
@@ -622,7 +641,9 @@ function saveMeasurement(){
   });
 
   saveState();
+  savedFlashUntil.measurement = Date.now() + 1500;
   render();
+  setTimeout(render, 1550);
 }
 
 /* ---------- Sekme yönetimi ---------- */
@@ -631,6 +652,7 @@ var activeTab = 'today';
 var selectedDayPreview = null;
 var warmupExpanded = false;
 var pendingExerciseValues = {};
+var savedFlashUntil = { settings: 0, measurement: 0 };
 function setTab(t){
   activeTab = t;
   selectedDayPreview = null;
@@ -691,13 +713,9 @@ function renderHeader(){
 }
 
 function renderBlockStartCard(){
-  var locked = state.sessions.length > 0;
-  if (locked){
-    return '<div class="card">' +
-      '<div class="card-title">🗓️ Program Başlangıcı</div>' +
-      '<div class="card-sub" style="margin-bottom:0;">Program başlangıcı: ' + formatDateTR(state.blockStart) + ' (kilitli — kayan takvim artık son tamamlanan seansa göre ilerliyor)</div>' +
-    '</div>';
-  }
+  // Sadece sessions.length === 0 iken (henüz kilitlenmemişken) çağrılmalı —
+  // kilitlendikten sonraki durum artık ayrı render edilmiyor, "Program"
+  // kartındaki tek satırlık kilit notuna taşındı (bkz. renderSettings).
   var minDate = addDays(todayISO(), -3);
   var maxDate = addDays(todayISO(), 90);
   // Kullanıcı henüz kendi seçimini yapmadıysa (blockStart hâlâ sabit
@@ -1139,27 +1157,26 @@ function renderMeasurementList(){
 
 function renderSettings(){
   var pr = state.profile;
-  var html = '<div class="card">' +
-    '<div class="card-title">👤 Profil</div>' +
-    '<div class="card-sub">Ölçüm geçmişine kayıt eklemek için aşağıdaki "Yeni Ölçüm Ekle" bölümünü kullan.</div>' +
-    '<div class="field"><label>Vücut Ağırlığı (kg)</label><input type="number" inputmode="decimal" step="0.1" id="set_weight" value="' + pr.weightKg + '"></div>' +
-    '<div class="field"><label>Boy (cm)</label><input type="number" inputmode="decimal" step="1" id="set_height" value="' + pr.heightCm + '"></div>' +
-    '<div class="field"><label>Vücut Yağı (%)</label><input type="number" inputmode="decimal" step="0.1" id="set_bodyfat" value="' + pr.bodyFatPct + '"></div>' +
-    '<div class="field"><label>Vücut Yaşı</label><input type="number" inputmode="numeric" step="1" id="set_bodyage" value="' + pr.bodyAge + '"></div>' +
-    '<div class="field"><label>Protein Çarpanı (g/kg)</label><input type="number" inputmode="decimal" step="0.1" id="set_protein_mult" value="' + pr.proteinPerKg + '"></div>' +
-    '<div class="field" style="margin-bottom:6px;"><label>Su Hedefi (şişe / 700ml)</label><input type="number" inputmode="numeric" step="1" id="set_water_goal" value="' + pr.waterGoalBottles + '"></div>' +
-    '<button class="btn-primary-soft" onclick="saveSettings()">Kaydet</button>' +
-  '</div>';
+  var settingsSaved = Date.now() < savedFlashUntil.settings;
+  var measurementSaved = Date.now() < savedFlashUntil.measurement;
+
+  var html = '<div class="section-eyebrow">Profil &amp; Hedefler</div>';
 
   html += '<div class="card">' +
-    '<div class="card-title">💾 Yedekleme</div>' +
-    '<div class="card-sub">Verilerin sadece bu telefonda saklanıyor. Telefon değiştirirsen veya Safari verisini silersen kaybolur — düzenli yedek al.</div>' +
-    '<div class="grid2">' +
-      '<button class="btn-secondary" onclick="downloadBackup()">⬇ Yedeği İndir</button>' +
-      '<button class="btn-secondary" onclick="triggerRestoreFilePicker()">⬆ Yedekten Geri Yükle</button>' +
+    '<div class="card-title">👤 Profil</div>' +
+    '<div class="readonly-stats">' +
+      '<div class="readonly-stat"><span class="readonly-label">Kilo</span><span class="readonly-value">' + pr.weightKg + ' kg</span></div>' +
+      '<div class="readonly-stat"><span class="readonly-label">Vücut Yağı</span><span class="readonly-value">%' + pr.bodyFatPct + '</span></div>' +
+      '<div class="readonly-stat"><span class="readonly-label">Vücut Yaşı</span><span class="readonly-value">' + pr.bodyAge + '</span></div>' +
     '</div>' +
-    '<input type="file" id="restoreFileInput" accept=".json,application/json" style="display:none;" onchange="restoreBackup(this)">' +
+    '<div class="card-sub">Bu değerler en son ölçümden geliyor — güncellemek için aşağıdaki "Yeni Ölçüm Ekle" bölümünü kullan.</div>' +
+    '<div class="field"><label>Boy (cm)</label><input type="number" inputmode="decimal" step="1" id="set_height" value="' + pr.heightCm + '"></div>' +
+    '<div class="field"><label>Protein Çarpanı (g/kg)</label><input type="number" inputmode="decimal" step="0.1" id="set_protein_mult" value="' + pr.proteinPerKg + '"></div>' +
+    '<div class="field" style="margin-bottom:6px;"><label>Su Hedefi (şişe / 700ml)</label><input type="number" inputmode="numeric" step="1" id="set_water_goal" value="' + pr.waterGoalBottles + '"></div>' +
+    '<button class="btn-primary-soft' + (settingsSaved ? ' saved-flash' : '') + '" onclick="saveSettings()">' + (settingsSaved ? '✓ Kaydedildi' : 'Kaydet') + '</button>' +
   '</div>';
+
+  html += '<div class="section-eyebrow">Ölçüm &amp; Yedekleme</div>';
 
   html += '<div class="card">' +
     '<div class="card-title">📏 Yeni Ölçüm Ekle</div>' +
@@ -1167,15 +1184,34 @@ function renderSettings(){
     '<div class="field"><label>Kilo (kg)</label><input type="number" inputmode="decimal" step="0.1" id="meas_weight" value="' + pr.weightKg + '"></div>' +
     '<div class="field"><label>Vücut Yağı (%)</label><input type="number" inputmode="decimal" step="0.1" id="meas_bodyfat" value="' + pr.bodyFatPct + '"></div>' +
     '<div class="field" style="margin-bottom:6px;"><label>Vücut Yaşı</label><input type="number" inputmode="numeric" step="1" id="meas_bodyage" value="' + pr.bodyAge + '"></div>' +
-    '<button class="btn-primary-soft" onclick="saveMeasurement()">Ölçümü Kaydet</button>' +
+    '<button class="btn-primary-soft' + (measurementSaved ? ' saved-flash' : '') + '" onclick="saveMeasurement()">' + (measurementSaved ? '✓ Kaydedildi' : 'Ölçümü Kaydet') + '</button>' +
     '<div style="margin-top:14px;">' + renderMeasurementList() + '</div>' +
   '</div>';
 
-  html += renderBlockStartCard();
+  var backupStatus = backupStatusText();
+  html += '<div class="card">' +
+    '<div class="card-title">💾 Yedekleme</div>' +
+    '<div class="card-sub">Verilerin sadece bu telefonda saklanıyor. Telefon değiştirirsen veya Safari verisini silersen kaybolur — düzenli yedek al.</div>' +
+    '<div class="backup-status' + (backupStatus.warn ? ' warn' : '') + '">' + (backupStatus.warn ? '⚠️ ' : '✓ ') + backupStatus.text + '</div>' +
+    '<div class="grid2">' +
+      '<button class="btn-secondary" onclick="downloadBackup()">⬇ Yedeği İndir</button>' +
+      '<button class="btn-secondary" onclick="triggerRestoreFilePicker()">⬆ Yedekten Geri Yükle</button>' +
+    '</div>' +
+    '<input type="file" id="restoreFileInput" accept=".json,application/json" style="display:none;" onchange="restoreBackup(this)">' +
+  '</div>';
 
+  html += '<div class="section-eyebrow">Program</div>';
+
+  if (state.sessions.length === 0){
+    html += renderBlockStartCard();
+  }
+
+  var lockedNote = state.sessions.length > 0
+    ? '<br><span class="small-muted">🔒 Başlangıç tarihi kilitli — kayan takvim artık son tamamlanan seansa göre ilerliyor.</span>'
+    : '';
   html += '<div class="card">' +
     '<div class="card-title">📊 Program</div>' +
-    '<div class="card-sub" style="margin-bottom:0;">Blok: ' + formatDateTR(state.blockStart) + ' – ' + formatDateTR(state.blockEnd) + '<br>Tamamlanan seans: ' + getCompletedCount() + ' · Hafta ' + getCurrentWeek() + '/24 · Faz ' + getPhase() + '</div>' +
+    '<div class="card-sub" style="margin-bottom:0;">Blok: ' + formatDateTR(state.blockStart) + ' – ' + formatDateTR(state.blockEnd) + '<br>Tamamlanan seans: ' + getCompletedCount() + ' · Hafta ' + getCurrentWeek() + '/24 · Faz ' + getPhase() + lockedNote + '</div>' +
   '</div>';
 
   html += '<div class="card card-danger-zone">' +
@@ -1188,22 +1224,18 @@ function renderSettings(){
 }
 
 function saveSettings(){
-  var weight = parseFloat(document.getElementById('set_weight').value);
   var height = parseFloat(document.getElementById('set_height').value);
-  var bodyfat = parseFloat(document.getElementById('set_bodyfat').value);
-  var bodyage = parseFloat(document.getElementById('set_bodyage').value);
   var proteinMult = parseFloat(document.getElementById('set_protein_mult').value);
   var waterGoal = parseInt(document.getElementById('set_water_goal').value, 10);
 
-  if (!isNaN(weight) && weight > 0) state.profile.weightKg = weight;
   if (!isNaN(height) && height > 0) state.profile.heightCm = height;
-  if (!isNaN(bodyfat) && bodyfat >= 0) state.profile.bodyFatPct = bodyfat;
-  if (!isNaN(bodyage) && bodyage > 0) state.profile.bodyAge = bodyage;
   if (!isNaN(proteinMult) && proteinMult > 0) state.profile.proteinPerKg = proteinMult;
   if (!isNaN(waterGoal) && waterGoal > 0) state.profile.waterGoalBottles = waterGoal;
 
   saveState();
+  savedFlashUntil.settings = Date.now() + 1500;
   render();
+  setTimeout(render, 1550);
 }
 
 function downloadBackup(){
@@ -1217,6 +1249,18 @@ function downloadBackup(){
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+
+  state.lastBackupAt = todayISO();
+  saveState();
+  render();
+}
+
+function backupStatusText(){
+  if (!state.lastBackupAt) return { text: 'Hiç yedek alınmadı', warn: true };
+  var days = daysBetween(state.lastBackupAt, todayISO());
+  if (days <= 0) return { text: 'Bugün yedeklendi', warn: false };
+  if (days === 1) return { text: 'Dün yedeklendi', warn: false };
+  return { text: days + ' gün önce yedeklendi', warn: days >= 14 };
 }
 
 function triggerRestoreFilePicker(){
@@ -1264,6 +1308,7 @@ function resetAllData(){
       saveState();
       activeTab = 'today';
       pendingExerciseValues = {};
+      savedFlashUntil = { settings: 0, measurement: 0 };
       render();
     }
   }
