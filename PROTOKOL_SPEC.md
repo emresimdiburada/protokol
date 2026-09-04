@@ -147,6 +147,30 @@ kontrolü için daha uygun bir uyaran olduğu. Bu genel prensipler, kullanıcın
 belirli bir akademik kaynağa atıf yapılmamıştır, sadece yaygın antrenman
 bilimi pratiğini yansıtır.
 
+### Isınma Protokolü
+
+Her antrenman öncesi, çalışma setlerine geçmeden önce ~8-10 dakikalık bir
+ısınma uygulanır (uygulamada "Bugün" ekranında, günün egzersiz listesinden
+hemen önce gösterilir):
+
+1. **3-5 dk hafif kardiyo** (eliptik, bisiklet ya da koşu bandı) — kas ve
+   eklem sıcaklığını yükseltmek için. Ekipman envanterindeki kondisyon
+   aletleri (bkz. aşağıdaki bölüm) bu amaçla kullanılır.
+2. **2-3 dk dinamik mobilite** — kol çemberleri, gövde rotasyonu, kalça
+   açıcı bacak sallama, omuz/skapula hareketleri. Bantlı ekipman yok;
+   kablo istasyonunda çok hafif ağırlıkla face pull / pull-apart aynı işi
+   görür.
+3. **Günün ilk (en ağır bileşik) hareketine özel ramp-up setleri** —
+   Barbell Deadlift, Dumbbell Bench Press ve Dumbbell Goblet Squat için
+   çalışma ağırlığının yaklaşık %40 → %60 → %80'i ile azalan tekrarlarla
+   (ör. 8-10-5) 2-3 ısınma seti; Ağırlıklı Pull-Up için ek ağırlık takmadan
+   önce birkaç tekrar sadece vücut ağırlığıyla, ardından hafif ek ağırlıkla
+   1-2 ısınma seti.
+
+Bu, direnç antrenmanında yaygın kabul gören genel bir ısınma yaklaşımıdır
+(genel aerobik aktivasyon → dinamik mobilite → harekete özel ramp-up);
+belirli bir akademik kaynağa atıf yapılmamıştır.
+
 ## Ekipman Envanteri ve Hareket Eşleştirmesi
 
 `referans-fotograflar/` klasöründeki salon fotoğrafları incelenerek şu

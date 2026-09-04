@@ -199,6 +199,11 @@
   .supp-check.checked{background:var(--success); border-color:var(--success);}
   .supp-label{font-size:14.5px; font-weight:700; color:#fff;}
   .supp-note{font-size:12px; color:var(--muted); margin-top:1px;}
+  .warmup-step{
+    font-size:13px; color:var(--text); line-height:1.5; padding:8px 0;
+    border-top:1px solid var(--border);
+  }
+  .warmup-step:first-of-type{border-top:none; padding-top:2px;}
 </style>
 </head>
 <body>
@@ -270,6 +275,18 @@ var EXERCISES = {
     { id:'d_pushdown',   name:'Triceps Pushdown',                  nameEn:'triceps pushdown cable',      unit:'kg',     prescription:{ sets:3, target:'12-15 tekrar' } },
     { id:'d_plank',      name:'Plank (Core)',                      nameEn:'plank exercise',              unit:'dk',     prescription:{ sets:3, target:'45-60 sn' } }
   ]
+};
+
+var WARMUP_GENERAL_STEPS = [
+  '3-5 dk hafif kardiyo (eliptik, bisiklet ya da koşu bandı) — kas ve eklem sıcaklığını yükseltmek için',
+  '2-3 dk dinamik mobilite: kol çemberleri, gövde rotasyonu, kalça açıcı bacak sallama, omuz/skapula hareketleri (kablo istasyonunda çok hafif ağırlıkla face pull / pull-apart de olur)'
+];
+
+var WARMUP_RAMPUP = {
+  A: 'Barbell Deadlift için ısınma setleri: çalışma ağırlığının yaklaşık %40 → %60 → %80\'i ile azalan tekrarlarla (ör. 8-10-5), aralarda kısa dinlenme.',
+  B: 'Dumbbell Bench Press için ısınma setleri: çalışma ağırlığının yaklaşık %40 → %60 → %80\'i ile azalan tekrarlarla (ör. 8-10-5), aralarda kısa dinlenme.',
+  C: 'Ağırlıklı Pull-Up için ısınma: önce birkaç tekrar sadece vücut ağırlığıyla, ardından hafif ek ağırlıkla 1-2 set, sonra çalışma ağırlığına geç.',
+  D: 'Dumbbell Goblet Squat için ısınma setleri: çalışma ağırlığının yaklaşık %40 → %60 → %80\'i ile azalan tekrarlarla (ör. 8-10-5), aralarda kısa dinlenme.'
 };
 
 var QUICK_PROTEIN = [10, 20, 30, 50];
@@ -721,6 +738,12 @@ function renderToday(){
       '<p>Son seanstan bu yana planlanandan ' + delta + ' gün geriden geliyorsun. Sıradaki tüm seanslar buna göre otomatik kaydı.</p>' +
       '</div>';
   }
+
+  var warmupLines = WARMUP_GENERAL_STEPS.concat([WARMUP_RAMPUP[displayDayType]]);
+  html += '<div class="card">' +
+    '<div class="card-title">🔥 Isınma (~8-10 dk)</div>' +
+    warmupLines.map(function(line, i){ return '<div class="warmup-step">' + (i+1) + '. ' + line + '</div>'; }).join('') +
+  '</div>';
 
   html += '<div class="card">';
   html += '<div class="row-between"><h2 class="card-title" style="font-size:19px;">Gün ' + displayDayType + ' · ' + info.title + '</h2></div>';
