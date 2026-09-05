@@ -243,6 +243,15 @@
   }
   .warmup-summary{font-size:13px; color:var(--muted); margin-top:2px;}
   .warmup-chevron{font-size:12px; color:var(--muted); font-weight:700; flex-shrink:0; margin-left:10px;}
+  .nutrition-window-toggle{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:10px 0 14px;}
+  .nutrition-window-btn{
+    background:var(--card-2); border:1px solid var(--border); color:var(--text);
+    padding:12px 8px; border-radius:12px; font-size:13.5px; text-align:center;
+  }
+  .nutrition-window-btn.active{background:var(--accent); border-color:var(--accent); color:#fff;}
+  .nutrition-section-title{font-size:13px; font-weight:800; color:#fff; margin:14px 0 4px;}
+  .nutrition-section-title:first-of-type{margin-top:2px;}
+  .nutrition-prompt{font-size:12.5px; color:var(--muted); margin:10px 0; line-height:1.5;}
   .section-eyebrow{
     font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase;
     letter-spacing:0.6px; margin:22px 2px 8px;
@@ -364,6 +373,36 @@ var SUPPLEMENTS = [
   { id:'collagen',  label:'Kolajen',      note:"Whey yerine değil, ek olarak" }
 ];
 
+/* ---------- Beslenme Zamanlaması (ISSN pozisyon bildirileri + güncel spor
+   beslenmesi konsensüsü) — sadece rehberlik, ayrı bir loglama yok ---------- */
+
+var PRE_WORKOUT_LONG = [
+  '20-40g protein (whey uygun)',
+  '1-4g/kg karbonhidrat — antrenmana yaklaştıkça daha basit/az miktar',
+  'Kreatin zamanlaması bu pencerede önemsiz, günü kaçırmamak yeterli'
+];
+
+var PRE_WORKOUT_SHORT = [
+  '20-25g whey (izolat tercih edilir — mide boşalmasını yavaşlatmaz)',
+  'Küçük, hızlı emilen karbonhidrat (muz, bal, hurma) — yüksek lifli/yağlı bir şey ÖNERİLMEZ (rahatsızlık riski)',
+  'Kreatin burada alınabilir, whey shake\'ine karıştırılır',
+  'Kafein varsa (kahve/preworkout) bu pencere ideal — etkisi 45-60 dk\'da pik yapar'
+];
+
+var POST_WORKOUT_NOTES = [
+  '20-40g yüksek kaliteli protein (whey shake burada ideal)',
+  'Kreatin burada da alınabilir (whey ile karıştırılabilir)',
+  'Karbonhidrat, ardışık gün antrenmanı yoksa daha az kritik'
+];
+
+var DAILY_SUPPLEMENT_TIMING = {
+  whey:      'Antrenman sonrası ya da günlük protein hedefine ulaşmak için gün içinde herhangi bir öğünde',
+  creatine:  'Saat önemsiz — antrenman öncesi/sonrası shake\'e karıştırılabilir, her gün alınması (antrenman günü olsun olmasın) zamanlamadan daha önemli',
+  magnesium: 'Akşam / yatmadan önce',
+  d3k2:      'Yemekle birlikte (yağda çözünür takviye)',
+  collagen:  'Günün herhangi bir saati, tercihen boş mideye; whey\'in yerine değil ek olarak'
+};
+
 var BLOCK_LENGTH_DAYS = 168;
 var TOTAL_SESSIONS = 96;
 var DEFAULT_BLOCK_START = '2026-08-29';
@@ -464,7 +503,8 @@ function defaultState(){
     water: { date: t, bottles: 0 },
     protein: { date: t, grams: 0, history: [] },
     supplements: { date: t, items: {} },
-    lastBackupAt: null
+    lastBackupAt: null,
+    nutritionWindowPref: null
   };
 }
 
@@ -513,7 +553,8 @@ function loadState(){
       water: parsed.water || def.water,
       protein: parsed.protein || def.protein,
       supplements: parsed.supplements || def.supplements,
-      lastBackupAt: parsed.lastBackupAt || null
+      lastBackupAt: parsed.lastBackupAt || null,
+      nutritionWindowPref: parsed.nutritionWindowPref || null
     };
   } catch(e){
     return def;
@@ -745,11 +786,13 @@ var savedFlashUntil = { settings: 0, measurement: 0 };
 var sessionCompleteUntil = 0;
 var lastCompletedDayType = null;
 var expressMode = false;
+var nutritionExpanded = false;
 function setTab(t){
   activeTab = t;
   selectedDayPreview = null;
   warmupExpanded = false;
   expressMode = false;
+  nutritionExpanded = false;
   render();
   window.scrollTo(0,0);
 }
@@ -767,6 +810,17 @@ function toggleExpressMode(){
 
 function toggleWarmup(){
   warmupExpanded = !warmupExpanded;
+  render();
+}
+
+function toggleNutritionTiming(){
+  nutritionExpanded = !nutritionExpanded;
+  render();
+}
+
+function setNutritionWindow(pref){
+  state.nutritionWindowPref = pref;
+  saveState();
   render();
 }
 
@@ -833,6 +887,50 @@ function renderBlockStartCard(){
     '<div class="card-sub">Gün A bu tarihte planlanacak. İlk seansı tamamladıktan sonra bu alan kilitlenir.</div>' +
     '<input type="date" id="blockStartInput" value="' + displayValue + '" min="' + minDate + '" max="' + maxDate + '" onchange="setBlockStart(this.value)">' +
   '</div>';
+}
+
+function renderNutritionTimingCard(){
+  var pref = state.nutritionWindowPref;
+  var summary = pref === 'short' ? 'Kısa pencere seçili — antrenman öncesi/sonrası + günlük zamanlama'
+    : (pref === 'long' ? 'Uzun pencere seçili — antrenman öncesi/sonrası + günlük zamanlama'
+    : 'Antrenman öncesi/sonrası + günlük takviye zamanlaması');
+
+  var html = '<div class="card card-accent-amber">' +
+    '<div class="warmup-toggle" onclick="toggleNutritionTiming()">' +
+      '<div>' +
+        '<div class="card-title" style="margin-bottom:0;">🍽️ Beslenme Zamanlaması</div>' +
+        (nutritionExpanded ? '' : '<div class="warmup-summary">' + summary + '</div>') +
+      '</div>' +
+      '<span class="warmup-chevron">' + (nutritionExpanded ? 'Gizle ▲' : 'Detaylar ▼') + '</span>' +
+    '</div>';
+
+  if (nutritionExpanded){
+    html += '<div class="nutrition-window-toggle">' +
+      '<button class="nutrition-window-btn' + (pref === 'long' ? ' active' : '') + '" onclick="setNutritionWindow(\'long\')">Uzun Pencere<br><span class="small-muted">1-3 saat önce</span></button>' +
+      '<button class="nutrition-window-btn' + (pref === 'short' ? ' active' : '') + '" onclick="setNutritionWindow(\'short\')">Kısa Pencere<br><span class="small-muted">30-45 dk önce</span></button>' +
+    '</div>';
+
+    html += '<div class="nutrition-section-title">🏋️ Antrenman Öncesi</div>';
+    if (!pref){
+      html += '<div class="nutrition-prompt">Antrenman öncesi ne kadar hazırlanma süren olduğunu yukarıdan seç, sana özel öneriyi göreyim.</div>';
+    } else {
+      var preLines = pref === 'long' ? PRE_WORKOUT_LONG : PRE_WORKOUT_SHORT;
+      html += preLines.map(function(l){ return '<div class="warmup-step">' + l + '</div>'; }).join('');
+    }
+
+    html += '<div class="nutrition-section-title">✅ Antrenman Sonrası (0-2 saat içinde)</div>';
+    html += POST_WORKOUT_NOTES.map(function(l){ return '<div class="warmup-step">' + l + '</div>'; }).join('');
+
+    html += '<div class="nutrition-section-title">📅 Günlük (Saatten Bağımsız)</div>';
+    html += SUPPLEMENTS.map(function(s){
+      return '<div class="warmup-step"><b>' + s.label + ':</b> ' + DAILY_SUPPLEMENT_TIMING[s.id] + '</div>';
+    }).join('');
+    var perMeal = Math.round(proteinTarget() / 3.5);
+    html += '<div class="warmup-step"><b>Protein:</b> günlük ' + proteinTarget() + 'g hedefini 3-4 öğüne yaklaşık eşit dağıt (~' + perMeal + 'g/öğün).</div>';
+  }
+
+  html += '</div>';
+  return html;
 }
 
 function renderToday(){
@@ -909,6 +1007,8 @@ function renderToday(){
       'Ağırlıkları artırmaya çalışma, tekniğe ve toparlanmaya odaklan.</p>' +
       '</div>';
   }
+
+  html += renderNutritionTimingCard();
 
   var warmupFirstExName = EXERCISES[displayDayType][0].name;
   var warmupLines = WARMUP_GENERAL_STEPS.slice();

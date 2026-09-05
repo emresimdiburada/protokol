@@ -482,6 +482,33 @@ maddeleri uygulandı:
   çalışıldığını (eşit hacim değil, eşit önem/sıralı öncelik) açıklayan bir
   not eklendi.
 
+## Sürüm 8 Ek Özellikleri — Beslenme Zamanlaması
+
+Bugün sekmesinde, Isınma kartının hemen üstünde, aynı katlanabilir
+kalıpta (`nutritionExpanded`, `toggleNutritionTiming()`) yeni bir
+"🍽️ Beslenme Zamanlaması" kartı eklendi. ISSN pozisyon bildirileri ve
+güncel spor beslenmesi konsensüsüne dayanan, **sadece rehberlik amaçlı**
+bir katman — Su/Protein/Takviye sekmelerindeki gerçek loglamayla
+çakışmıyor, hiçbir yeni takip/checkbox eklemiyor.
+
+- **Antrenman öncesi — iki pencere, kullanıcı seçer:** `state.nutritionWindowPref`
+  (`null` / `'long'` / `'short'`, kalıcı — `setNutritionWindow()` ile
+  ayarlanır, `protokol_state`'e kaydedilir). Seçime göre `PRE_WORKOUT_LONG`
+  (1-3 saat önce: 20-40g protein, 1-4g/kg karbonhidrat, kreatin zamanlaması
+  önemsiz) ya da `PRE_WORKOUT_SHORT` (30-45 dk önce: 20-25g whey izolat,
+  hızlı emilen küçük karbonhidrat, kreatin burada da olur, kafein için
+  ideal pencere) gösterilir. Seçim yapılmamışsa bir seçim istemi gösterilir.
+- **Antrenman sonrası (0-2 saat, katı 30dk kuralı yok):** `POST_WORKOUT_NOTES`
+  — pencere seçiminden bağımsız, her zaman gösterilir (20-40g protein,
+  kreatin burada da olur, karbonhidrat ardışık gün antrenmanı yoksa daha
+  az kritik).
+- **Günlük (saatten bağımsız):** `DAILY_SUPPLEMENT_TIMING`, mevcut
+  `SUPPLEMENTS` listesindeki (Whey, Kreatin, Magnezyum, D3K2, Kolajen)
+  her kalem için zamanlama önerisi + günlük protein hedefini
+  (`proteinTarget()`) 3-4 öğüne bölen bir hesaplama (~hedef/3.5 g/öğün).
+  Bu içerik SUPPLEMENTS'ten canlı okunuyor — yeni bir takviye eklenirse
+  `DAILY_SUPPLEMENT_TIMING`'e de bir giriş eklenmesi gerekir.
+
 ## Veri Modeli (localStorage, tek anahtar: `protokol_state`)
 
 ```json
