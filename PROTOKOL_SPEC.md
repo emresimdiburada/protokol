@@ -509,6 +509,37 @@ bir katman — Su/Protein/Takviye sekmelerindeki gerçek loglamayla
   Bu içerik SUPPLEMENTS'ten canlı okunuyor — yeni bir takviye eklenirse
   `DAILY_SUPPLEMENT_TIMING`'e de bir giriş eklenmesi gerekir.
 
+## Sürüm 9 Ek Özellikleri — Vücut Ölçümü Girişi Faz Mantığına Bağlandı
+
+Ayarlar'daki mevcut "Yeni Ölçüm Ekle" (`state.measurements`) genişletildi —
+ayrı bir veri yapısı eklenmedi, tek ölçüm geçmişi korundu:
+
+- **Kilo VE vücut yağı artık ikisi de opsiyonel, ama en az biri gerekli.**
+  `saveMeasurement()` artık `hasWeight`/`hasBodyfat` bayraklarıyla kontrol
+  ediyor; ikisi de boşsa kayıt reddedilip uyarı gösteriliyor. Girilmeyen
+  alan o kayıtta `null` olarak saklanıyor (`weightKg`/`bodyFatPct`).
+- **Tarih alanı eklendi** ("Yeni Ölçüm Ekle" formunda, varsayılan bugün,
+  gelecek tarih seçilemez) — geriye dönük bir ölçüm eklenebiliyor.
+- **Faz mantığı artık `state.profile.bodyFatPct` yerine doğrudan ölçüm
+  geçmişinin EN SON gerçek vücut yağı kaydına bakıyor:** yeni
+  `latestBodyFatPct()`, `sortedMeasurements()`'ı sondan başa tarayıp
+  `bodyFatPct` dolu olan ilk kaydı döner (kilo-only kayıtlar atlanır),
+  hiç kayıt yoksa `state.profile.bodyFatPct` varsayılanına düşer.
+  `getPhase()` ve Protein sekmesindeki Faz 1 metni artık bunu kullanıyor.
+  (Not: `state.profile.bodyFatPct` zaten her ölçümde `hasBodyfat` ile
+  aynı anda güncellendiğinden bu değişiklik sayısal sonucu değiştirmiyor
+  — amaç, kısmi/karma kayıtlar mümkün olduğunda doğru kaynaktan
+  doğrudan okumak.)
+- **14+ gün / hiç ölçüm yok hatırlatıcısı:** Bugün sekmesinde, hafif
+  hafta banner'ının hemen altında, nötr `.banner` stiliyle (kırmızı/acil
+  değil) "📏 Ölçüm Zamanı mı?" kartı — `daysSinceLastMeasurement()` ya
+  `null` (hiç ölçüm yok) ya da `>= 14` ise gösterilir.
+- **Fotoğraf desteği kapsam dışı bırakıldı** — sadece sayısal veri.
+- `getLastTwoMeasurementsDiff()` ve `renderMeasurementList()`, artık
+  kısmi (kilo-only ya da yağ-only) kayıtlarla karışabileceğinden
+  `null`-güvenli hale getirildi (eksik alan için fark hesaplanmıyor,
+  gösterimde sadece dolu olan alan yazılıyor).
+
 ## Veri Modeli (localStorage, tek anahtar: `protokol_state`)
 
 ```json

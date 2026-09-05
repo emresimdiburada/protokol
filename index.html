@@ -620,7 +620,7 @@ function getSessionsThisWeek(){ return getCompletedCount() % 4; }
 function getPhase(){
   var week = getCurrentWeek();
   if (week >= PHASE2_SAFETY_WEEK) return 2; // güvenlik sınırı: hedefe ulaşılmasa bile geç
-  if (week >= PHASE2_MIN_WEEK && state.profile.bodyFatPct <= PHASE2_BODYFAT_THRESHOLD) return 2;
+  if (week >= PHASE2_MIN_WEEK && latestBodyFatPct() <= PHASE2_BODYFAT_THRESHOLD) return 2;
   return 1;
 }
 function isPhaseCheckWeek(){ return getCurrentWeek() === 12; }
@@ -734,31 +734,55 @@ function getLastTwoMeasurementsDiff(){
   if (sorted.length < 2) return null;
   var last = sorted[sorted.length - 1];
   var prev = sorted[sorted.length - 2];
-  var weightDiff = Math.round((last.weightKg - prev.weightKg) * 10) / 10;
+  var weightDiff = (last.weightKg != null && prev.weightKg != null)
+    ? Math.round((last.weightKg - prev.weightKg) * 10) / 10
+    : null;
   var fatDiff = (last.bodyFatPct != null && prev.bodyFatPct != null)
     ? Math.round((last.bodyFatPct - prev.bodyFatPct) * 10) / 10
     : null;
   return { weightDiff: weightDiff, fatDiff: fatDiff };
 }
 
+// Faz mantığı, sabit profile.bodyFatPct yerine ölçüm geçmişindeki en son
+// gerçek vücut yağı kaydına bakar (kilo-only girişler atlanır). Hiç
+// ölçüm yoksa profile varsayılanına düşer.
+function latestBodyFatPct(){
+  var sorted = sortedMeasurements();
+  for (var i = sorted.length - 1; i >= 0; i--){
+    if (sorted[i].bodyFatPct != null) return sorted[i].bodyFatPct;
+  }
+  return state.profile.bodyFatPct;
+}
+
+function daysSinceLastMeasurement(){
+  var sorted = sortedMeasurements();
+  if (sorted.length === 0) return null;
+  return daysBetween(sorted[sorted.length - 1].date, todayISO());
+}
+
 function saveMeasurement(){
+  var dateEl = document.getElementById('meas_date');
+  var date = (dateEl && dateEl.value) ? dateEl.value : todayISO();
   var weight = parseFloat(document.getElementById('meas_weight').value);
   var bodyfat = parseFloat(document.getElementById('meas_bodyfat').value);
   var bodyage = parseFloat(document.getElementById('meas_bodyage').value);
 
-  if (isNaN(weight) || weight <= 0){
-    alert('Geçerli bir kilo girmelisin.');
+  var hasWeight = !isNaN(weight) && weight > 0;
+  var hasBodyfat = !isNaN(bodyfat) && bodyfat >= 0;
+
+  if (!hasWeight && !hasBodyfat){
+    alert('Kilo ya da vücut yağı yüzdesinden en az birini girmelisin.');
     return;
   }
 
-  state.profile.weightKg = weight;
-  if (!isNaN(bodyfat) && bodyfat >= 0) state.profile.bodyFatPct = bodyfat;
+  if (hasWeight) state.profile.weightKg = weight;
+  if (hasBodyfat) state.profile.bodyFatPct = bodyfat;
   if (!isNaN(bodyage) && bodyage > 0) state.profile.bodyAge = bodyage;
 
   state.measurements.push({
-    date: todayISO(),
-    weightKg: weight,
-    bodyFatPct: isNaN(bodyfat) ? null : bodyfat,
+    date: date,
+    weightKg: hasWeight ? weight : null,
+    bodyFatPct: hasBodyfat ? bodyfat : null,
     bodyAge: isNaN(bodyage) ? null : bodyage
   });
 
@@ -971,9 +995,11 @@ function renderToday(){
   if (isPhaseCheckWeek()){
     var measDiff = getLastTwoMeasurementsDiff();
     var measDiffText = '';
-    if (measDiff){
-      measDiffText = ' Son ölçümden bu yana: ' + (measDiff.weightDiff > 0 ? '+' : '') + measDiff.weightDiff + 'kg' +
-        (measDiff.fatDiff != null ? (', ' + (measDiff.fatDiff > 0 ? '+' : '') + measDiff.fatDiff + '% yağ') : '') + '.';
+    if (measDiff && (measDiff.weightDiff != null || measDiff.fatDiff != null)){
+      var measDiffParts = [];
+      if (measDiff.weightDiff != null) measDiffParts.push((measDiff.weightDiff > 0 ? '+' : '') + measDiff.weightDiff + 'kg');
+      if (measDiff.fatDiff != null) measDiffParts.push((measDiff.fatDiff > 0 ? '+' : '') + measDiff.fatDiff + '% yağ');
+      measDiffText = ' Son ölçümden bu yana: ' + measDiffParts.join(', ') + '.';
     }
     html += '<div class="banner">' +
       '<b>🔔 Hafta 12 · Faz Geçiş Kontrolü</b>' +
@@ -997,6 +1023,17 @@ function renderToday(){
       '<b>🧘 Hafif Hafta</b>' +
       '<p>Bu hafta (' + getCurrentWeek() + ') planlı bir toparlanma haftası — set sayıları ~%35 azaltıldı. ' +
       'Ağırlıkları artırmaya çalışma, tekniğe ve toparlanmaya odaklan.</p>' +
+      '</div>';
+  }
+
+  var daysSinceMeasurement = daysSinceLastMeasurement();
+  if (daysSinceMeasurement === null || daysSinceMeasurement >= 14){
+    var measBannerText = daysSinceMeasurement === null
+      ? 'Henüz hiç ölçüm girmedin — faz geçişinin (vücut yağı ≤%' + PHASE2_BODYFAT_THRESHOLD + ') doğru çalışması için Ayarlar\'dan bir ölçüm ekle.'
+      : 'Son ölçümün ' + daysSinceMeasurement + ' gün önce — güncellemek ister misin?';
+    html += '<div class="banner">' +
+      '<b>📏 Ölçüm Zamanı mı?</b>' +
+      '<p>' + measBannerText + '</p>' +
       '</div>';
   }
 
@@ -1209,7 +1246,7 @@ function renderProtein(){
   var pct = target > 0 ? Math.min(100, Math.round(p.grams / target * 100)) : 0;
   var phase = getPhase();
   var phaseText = phase === 1
-    ? 'Faz 1 · Recomp — hafif kalori açığı + yüksek protein (%' + state.profile.bodyFatPct + ' → hedef ~%16-17 vücut yağı)'
+    ? 'Faz 1 · Recomp — hafif kalori açığı + yüksek protein (%' + latestBodyFatPct() + ' → hedef ~%16-17 vücut yağı)'
     : 'Faz 2 · Lean Bulk — tanımın üzerine kas ekleme, kalori dengeye/hafif fazlaya çekilir';
   var tdee = estimatedTDEE();
   var calTarget = calorieTarget();
@@ -1388,16 +1425,20 @@ function renderMeasurementList(){
     var weightDiffText = '';
     var fatDiffText = '';
     if (prev){
-      var wd = Math.round((m.weightKg - prev.weightKg) * 10) / 10;
-      weightDiffText = ' <span class="small-muted">(' + (wd > 0 ? '▲ +' : (wd < 0 ? '▼ ' : '± ')) + wd + 'kg)</span>';
+      if (m.weightKg != null && prev.weightKg != null){
+        var wd = Math.round((m.weightKg - prev.weightKg) * 10) / 10;
+        weightDiffText = ' <span class="small-muted">(' + (wd > 0 ? '▲ +' : (wd < 0 ? '▼ ' : '± ')) + wd + 'kg)</span>';
+      }
       if (m.bodyFatPct != null && prev.bodyFatPct != null){
         var fd = Math.round((m.bodyFatPct - prev.bodyFatPct) * 10) / 10;
         fatDiffText = ' <span class="small-muted">(' + (fd > 0 ? '▲ +' : (fd < 0 ? '▼ ' : '± ')) + fd + '%)</span>';
       }
     }
+    var parts = [];
+    if (m.weightKg != null) parts.push(m.weightKg + 'kg' + weightDiffText);
+    if (m.bodyFatPct != null) parts.push('%' + m.bodyFatPct + ' yağ' + fatDiffText);
     html += '<div class="hist-item" style="padding:8px 0;">' +
-      '<div class="hist-ex" style="margin-top:0;">' + formatDateTR(m.date) + ' — ' + m.weightKg + 'kg' + weightDiffText +
-      (m.bodyFatPct != null ? (' · %' + m.bodyFatPct + ' yağ' + fatDiffText) : '') +
+      '<div class="hist-ex" style="margin-top:0;">' + formatDateTR(m.date) + ' — ' + parts.join(' · ') +
       '</div>' +
     '</div>';
   });
@@ -1429,7 +1470,8 @@ function renderSettings(){
 
   html += '<div class="card">' +
     '<div class="card-title">📏 Yeni Ölçüm Ekle</div>' +
-    '<div class="card-sub">Güncel ölçümünü gir; hem profilin hem ölçüm geçmişin güncellenir.</div>' +
+    '<div class="card-sub">Kilo ya da vücut yağından en az birini gir (ikisi de opsiyonel, ama biri gerekli); hem profilin hem ölçüm geçmişin güncellenir.</div>' +
+    '<div class="field"><label>Tarih</label><input type="date" id="meas_date" value="' + todayISO() + '" max="' + todayISO() + '"></div>' +
     '<div class="field"><label>Kilo (kg)</label><input type="number" inputmode="decimal" step="0.1" id="meas_weight" value="' + pr.weightKg + '"></div>' +
     '<div class="field"><label>Vücut Yağı (%)</label><input type="number" inputmode="decimal" step="0.1" id="meas_bodyfat" value="' + pr.bodyFatPct + '"></div>' +
     '<div class="field" style="margin-bottom:6px;"><label>Vücut Yaşı</label><input type="number" inputmode="numeric" step="1" id="meas_bodyage" value="' + pr.bodyAge + '"></div>' +
