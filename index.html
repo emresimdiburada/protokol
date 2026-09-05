@@ -101,6 +101,19 @@
     border:1px solid rgba(245,158,11,0.35); padding:5px 9px; border-radius:8px;
     margin-top:6px; display:inline-block;
   }
+  .caution-badge{
+    font-size:12px; font-weight:700; color:#fca5a5; background:rgba(239,68,68,0.12);
+    border:1px solid rgba(239,68,68,0.35); padding:5px 9px; border-radius:8px;
+    margin-top:6px; display:block;
+  }
+  .express-toggle{
+    font-size:12.5px; font-weight:700; color:var(--accent-2); background:none;
+    border:none; padding:0; margin-top:6px; text-decoration:underline;
+  }
+  .express-note{
+    font-size:12.5px; color:var(--muted); background:var(--card-2); border:1px solid var(--border);
+    border-radius:10px; padding:10px 12px; margin-bottom:12px; line-height:1.5;
+  }
   .quote-banner{
     font-size:13.5px; font-style:italic; color:var(--accent-2); text-align:center;
     padding:2px 8px 14px 8px; line-height:1.5;
@@ -360,6 +373,32 @@ var DEFAULT_BLOCK_START = '2026-08-29';
 var PHASE2_BODYFAT_THRESHOLD = 17;
 var PHASE2_MIN_WEEK = 8;
 var PHASE2_SAFETY_WEEK = 16;
+
+// Periyotlama: 24 haftalık blokta hiç deload olmadan lineer ilerleme
+// platoya/birikmiş yorgunluğa yol açabilir (bkz. program-degerlendirme.md,
+// Fitness Koçu #3). Bu haftalarda reçete edilen set sayısı ~%35 azaltılıp
+// gösterilir; egzersiz listesinin kendisi değişmez.
+var DELOAD_WEEKS = [6, 12, 18];
+function isDeloadWeek(){ return DELOAD_WEEKS.indexOf(getCurrentWeek()) !== -1; }
+function deloadSetCount(sets){ return Math.max(1, Math.round(sets * 0.65)); }
+
+// Yüksek riskli / teknik açıdan hassas hareketler için uyarı metinleri
+// (bkz. program-degerlendirme.md, Doktor bölümü). firstTimeOnly: true olan
+// sadece o hareket için hiç kayıt yokken gösterilir; false olan (Ağırlıklı
+// Dips) her zaman gösterilir çünkü bodyweight-ustalık hatırlatması tekrar
+// ağırlık artırılırken de geçerli kalır.
+var EXERCISE_CAUTIONS = {
+  a_deadlift: { firstTimeOnly: true, text: 'Yeni bir hareketse hafif ağırlıkla forma odaklan, YouTube linkinden tekniği kontrol et.' },
+  c_pullup:   { firstTimeOnly: true, text: 'Yeni bir hareketse hafif ağırlıkla forma odaklan, YouTube linkinden tekniği kontrol et.' },
+  b_dip:      { firstTimeOnly: false, text: 'Ek ağırlık eklemeden önce 10+ temiz vücut ağırlığı dips yapabildiğinden emin ol.' }
+};
+
+// "Hızlı seans" / minimum-viable seans modu (bkz. program-degerlendirme.md,
+// Yaşam Koçu #3) — yoğun bir günde sadece en öncelikli birkaç hareketi
+// göster; egzersiz listeleri zaten önceliğe göre sıralı olduğundan bu
+// sadece exList'i kısaltmak demek, completeSession() zaten sadece dolu
+// input'ları kaydediyor.
+var EXPRESS_EXERCISE_COUNT = 3;
 
 var MOTIVATION_QUOTES = [
   'Bugün attığın her adım, aynadaki o hedefe bir gün daha yaklaştırıyor.',
@@ -627,6 +666,28 @@ function proteinTarget(){
   return Math.round(state.profile.weightKg * state.profile.proteinPerKg);
 }
 
+// Kaba günlük kalori hedefi (bkz. program-degerlendirme.md, Diyetisyen #4) —
+// Faz 1/2 metinleri şimdiye kadar sadece "hafif açık"/"hafif fazla" gibi
+// ölçülemez ifadelerdi. Mifflin-St Jeor ile TDEE tahmini + faza göre
+// sabit bir açık/fazla uygulanıyor. Gerçek doğum tarihi tutulmadığından
+// "Vücut Yaşı" alanı yaş yerine kaba bir yaklaşık olarak kullanılıyor.
+// Kilo/boy/vücut yaşı her değiştiğinde (ör. yeni ölçüm) otomatik olarak
+// yeniden hesaplanır — ayrı bir state alanı olarak saklanmıyor.
+var TDEE_ACTIVITY_MULTIPLIER = 1.45; // masa başı iş + haftada ~4x yapılandırılmış antrenman
+var PHASE1_CALORIE_DEFICIT = 400;
+var PHASE2_CALORIE_SURPLUS = 250;
+
+function estimatedTDEE(){
+  var p = state.profile;
+  var bmr = 10 * p.weightKg + 6.25 * p.heightCm - 5 * p.bodyAge + 5;
+  return Math.round(bmr * TDEE_ACTIVITY_MULTIPLIER);
+}
+
+function calorieTarget(){
+  var tdee = estimatedTDEE();
+  return getPhase() === 1 ? (tdee - PHASE1_CALORIE_DEFICIT) : (tdee + PHASE2_CALORIE_SURPLUS);
+}
+
 /* ---------- Vücut ölçüm geçmişi ---------- */
 
 function sortedMeasurements(){
@@ -683,16 +744,24 @@ var pendingExerciseValues = {};
 var savedFlashUntil = { settings: 0, measurement: 0 };
 var sessionCompleteUntil = 0;
 var lastCompletedDayType = null;
+var expressMode = false;
 function setTab(t){
   activeTab = t;
   selectedDayPreview = null;
   warmupExpanded = false;
+  expressMode = false;
   render();
   window.scrollTo(0,0);
 }
 
 function selectDayTab(dayType){
   selectedDayPreview = dayType;
+  expressMode = false;
+  render();
+}
+
+function toggleExpressMode(){
+  expressMode = !expressMode;
   render();
 }
 
@@ -826,9 +895,18 @@ function renderToday(){
   }
 
   if (delta > 0){
-    html += '<div class="banner due">' +
-      '<b>⏳ Program kaymış durumda</b>' +
-      '<p>Son seanstan bu yana planlanandan ' + delta + ' gün geriden geliyorsun. Sıradaki tüm seanslar buna göre otomatik kaydı.</p>' +
+    html += '<div class="banner">' +
+      '<b>📅 Takvim Güncellendi</b>' +
+      '<p>Son seanstan bu yana ' + delta + ' gün geçti. Kayan takvim buna göre otomatik ayarlandı — sıradaki tüm tarihler kaydırıldı. ' +
+      'Bu normal, kayan takvim tam da bunun için var.</p>' +
+      '</div>';
+  }
+
+  if (isDeloadWeek()){
+    html += '<div class="banner">' +
+      '<b>🧘 Hafif Hafta</b>' +
+      '<p>Bu hafta (' + getCurrentWeek() + ') planlı bir toparlanma haftası — set sayıları ~%35 azaltıldı. ' +
+      'Ağırlıkları artırmaya çalışma, tekniğe ve toparlanmaya odaklan.</p>' +
       '</div>';
   }
 
@@ -855,7 +933,15 @@ function renderToday(){
     html += '<div class="card-sub"><span class="small-muted">Önizleme · planlanan tarih: ' + formatDateTR(getNextDateForDayType(displayDayType)) + '</span></div>';
   }
 
-  var exList = EXERCISES[displayDayType];
+  var fullExList = EXERCISES[displayDayType];
+  var exList = expressMode ? fullExList.slice(0, EXPRESS_EXERCISE_COUNT) : fullExList;
+  if (expressMode){
+    html += '<div class="express-note">⚡ Hızlı seans modu — sadece en öncelikli ' + exList.length + '/' + fullExList.length +
+      ' hareket gösteriliyor. <button class="express-toggle" onclick="toggleExpressMode()">Tam seansa dön</button></div>';
+  } else {
+    html += '<button class="express-toggle" onclick="toggleExpressMode()">⚡ Hızlı seans (sadece ' + EXPRESS_EXERCISE_COUNT + ' öncelikli hareket)</button>';
+  }
+
   var prevSession = getPrevSessionForDay(displayDayType);
   exList.forEach(function(ex){
     var prevVal = null;
@@ -869,6 +955,13 @@ function renderToday(){
         : '💡 İlerleme zamanı — bu sefer biraz daha ağırlık dene';
       hintHtml = '<div class="hint-badge">' + hintText + '</div>';
     }
+    var cautionHtml = '';
+    var caution = EXERCISE_CAUTIONS[ex.id];
+    if (caution && (!caution.firstTimeOnly || prevVal === null)){
+      cautionHtml = '<div class="caution-badge">⚠️ ' + caution.text + '</div>';
+    }
+    var displaySets = isDeloadWeek() ? deloadSetCount(ex.prescription.sets) : ex.prescription.sets;
+    var deloadNote = isDeloadWeek() ? ' (hafif hafta)' : '';
     var pendingVal = pendingExerciseValues[ex.id] !== undefined ? pendingExerciseValues[ex.id] : '';
     var doneDisplay = pendingVal !== '' ? 'inline' : 'none';
     var diffHtml = (prevVal !== null ? '±0' : '');
@@ -883,9 +976,10 @@ function renderToday(){
       '<div class="ex-top">' +
         '<div><span class="ex-name">' + ex.name + '</span><span class="unit-pill">' + unitLabel(ex.unit) + '</span>' +
         '<span class="ex-done-badge" id="ex_done_' + ex.id + '" style="display:' + doneDisplay + ';">✓ kaydedildi</span>' +
-        '<div class="ex-prescription">' + ex.prescription.sets + ' set × ' + ex.prescription.target + '</div>' +
+        '<div class="ex-prescription">' + displaySets + ' set × ' + ex.prescription.target + deloadNote + '</div>' +
         '<div class="ex-prev">' + (prevVal !== null ? 'Önceki: ' + prevVal + ' ' + unitLabel(ex.unit) : 'Önceki kayıt yok') + '</div>' +
         hintHtml +
+        cautionHtml +
         '</div>' +
         '<a class="yt-link" href="' + ytLink(ex.nameEn) + '" target="_blank" rel="noopener">▶ YouTube</a>' +
       '</div>' +
@@ -970,6 +1064,7 @@ function completeSession(dayType){
   exList.forEach(function(ex){ delete pendingExerciseValues[ex.id]; });
   state.sessions.push({ date: todayISO(), dayType: dayType, exercises: exercises });
   selectedDayPreview = null;
+  expressMode = false;
   lastCompletedDayType = dayType;
   sessionCompleteUntil = Date.now() + 2500;
   saveState();
@@ -1024,6 +1119,11 @@ function renderProtein(){
   var phaseText = phase === 1
     ? 'Faz 1 · Recomp — hafif kalori açığı + yüksek protein (%' + state.profile.bodyFatPct + ' → hedef ~%16-17 vücut yağı)'
     : 'Faz 2 · Lean Bulk — tanımın üzerine kas ekleme, kalori dengeye/hafif fazlaya çekilir';
+  var tdee = estimatedTDEE();
+  var calTarget = calorieTarget();
+  var calDeltaText = phase === 1
+    ? ('~' + PHASE1_CALORIE_DEFICIT + ' kcal açık')
+    : ('~' + PHASE2_CALORIE_SURPLUS + ' kcal fazla');
 
   var html = '<div class="card card-accent-amber">' +
     '<div class="card-title">🍗 Bugünkü Protein</div>' +
@@ -1033,6 +1133,8 @@ function renderProtein(){
     '</div>' +
     '<div class="progress-track"><div class="progress-fill" style="width:' + pct + '%"></div></div>' +
     '<div class="card-sub" style="margin-top:8px; margin-bottom:0;">Hedef: vücut ağırlığı × ' + state.profile.proteinPerKg + ' g/kg = ' + target + 'g</div>' +
+    '<div class="small-muted" style="margin-top:10px;">Kaba kalori hedefi: ~' + calTarget + ' kcal/gün (tahmini TDEE ~' + tdee +
+    ' kcal, ' + calDeltaText + ' — Mifflin-St Jeor + orta aktivite varsayımıyla kaba bir tahmindir, gerçek ihtiyacın değişebilir)</div>' +
   '</div>';
 
   html += '<div class="card">' +
@@ -1365,6 +1467,7 @@ function resetAllData(){
       pendingExerciseValues = {};
       savedFlashUntil = { settings: 0, measurement: 0 };
       sessionCompleteUntil = 0;
+      expressMode = false;
       render();
     }
   }

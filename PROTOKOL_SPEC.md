@@ -11,6 +11,11 @@ kullanım için tasarlandı.
 - Hedef: 6 ayda maksimum gelişim, "Kaptan Amerika" fizik hedefi
 - Öncelik sırası: **Duruş, Sırt, Göğüs, Omuz** (bacak/kol ikincil ama gerçek
   bir antrenman günü var — göz ardı edilmiyor)
+- **Not (bkz. program-degerlendirme.md, Fitness Koçu #1):** bu bir *sıralı*
+  öncelik, *eşit* değil — sırt/postür bu yüzden haftada 2x (Gün A + Gün C),
+  göğüs 1x (Gün B) çalışılıyor. Bu, fotoğraf değerlendirmesindeki öne
+  kaymış baş/yuvarlanmış omuz paternini düzeltmek için bilinçli bir tercih;
+  "eşit önem" ile "eşit hacim" birbirine karıştırılmamalı.
 
 ## Görsel Değerlendirme Notları
 
@@ -436,6 +441,46 @@ tanımlı; buradaki liste sadece neyin, neden değiştiğinin özeti.
   değerler sayfa içi `pendingExerciseValues` objesinde tutulup her
   render'da input'a geri yazılıyor; sadece `completeSession()`
   tamamlandığında o günün girişleri temizleniyor.
+
+## Sürüm 7 Ek Özellikleri — `program-degerlendirme.md` Bulgularının Uygulanması
+
+4 uzman perspektifinden (Fitness Koçu, Diyetisyen, Doktor, Yaşam Koçu)
+yapılan bağımsız değerlendirmenin (`program-degerlendirme.md`) tüm
+maddeleri uygulandı:
+
+- **Periyotlama / deload haftaları:** `DELOAD_WEEKS = [6, 12, 18]`.
+  Bu haftalarda `isDeloadWeek()` true döner, egzersiz kartlarındaki set
+  sayısı `deloadSetCount()` ile ~%35 azaltılıp "(hafif hafta)" notuyla
+  gösterilir (egzersiz LİSTESİ değişmez, sadece gösterilen set sayısı).
+  Bugün sekmesinde ayrıca bir "🧘 Hafif Hafta" bilgi banner'ı çıkar.
+- **Kaba günlük kalori hedefi:** `estimatedTDEE()` (Mifflin-St Jeor, "Vücut
+  Yaşı" alanı yaş yerine kaba yaklaşık olarak kullanılıyor, orta aktivite
+  çarpanı 1.45) ve `calorieTarget()` (Faz 1'de TDEE−400, Faz 2'de
+  TDEE+250) Protein sekmesinde protein hedefinin altında gösteriliyor.
+  Statik olarak saklanmıyor — kilo/boy/vücut yaşı her değiştiğinde
+  otomatik yeniden hesaplanıyor.
+- **Yüksek riskli hareket uyarıları:** `EXERCISE_CAUTIONS` haritası —
+  Barbell Deadlift ve Ağırlıklı Pull-Up için sadece o hareketin hiç
+  geçmiş kaydı yokken ("firstTimeOnly") bir form/teknik uyarısı; Ağırlıklı
+  Dips için her zaman ("firstTimeOnly: false") bir bodyweight-ustalık
+  hatırlatması gösteriliyor (`.caution-badge`, kırmızı tonlu).
+- **Hızlı seans / minimum-viable seans modu:** Bugün ekranında "⚡ Hızlı
+  seans" düğmesi, `expressMode` state'i ile egzersiz listesini ilk
+  `EXPRESS_EXERCISE_COUNT` (3) harekete kısaltır. Egzersiz listeleri zaten
+  öncelik sırasına göre dizildiğinden bu sadece görüntülenen listeyi
+  kısaltmak demek — `completeSession()` zaten sadece DOM'da input'u
+  bulunan (yani o an gösterilen) hareketleri kaydediyor, ek bir mantık
+  gerekmedi. `expressMode` sekme değişince/gün değişince/seans
+  tamamlanınca sıfırlanır, kalıcı tutulmaz.
+- **"Program kaymış durumda" banner'ının tonu nötrleştirildi:** Kırmızı
+  `.banner.due` stili ve suçlayıcı "geriden geliyorsun" ifadesi yerine,
+  nötr `.banner` stili ve "📅 Takvim Güncellendi / ... otomatik ayarlandı,
+  bu normal" ifadesi kullanılıyor — kayan takvimin zaten cezalandırmayan
+  tasarımıyla mesaj tonu artık tutarlı.
+- **Profil önceliği netleştirildi:** "Kullanıcı Profili" bölümüne, sırt/
+  postürün *sıralı* önceliğin bir sonucu olarak haftada 2x, göğüsün 1x
+  çalışıldığını (eşit hacim değil, eşit önem/sıralı öncelik) açıklayan bir
+  not eklendi.
 
 ## Veri Modeli (localStorage, tek anahtar: `protokol_state`)
 
