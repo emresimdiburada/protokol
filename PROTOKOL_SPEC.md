@@ -101,7 +101,8 @@ kullanım için tasarlandı.
 4. Face Pull — kg — 3 set × 12-15 tekrar
 5. Single-Arm Dumbbell Row — kg/kol — 3 set × 12-15 tekrar
 6. Prone Trap Raise (Duruş) — kg — 3 set × 15 tekrar
-7. Dead Hang (Duruş) — dk — 3 set × maks. asılı kal (hedef 20-30 sn)
+7. Chin Tuck (Boyun Retraksiyonu) — dk — 2 set × 30 sn tutuş *(Sürüm 6'da eklendi, Dead Hang'den hemen önce)*
+8. Dead Hang (Duruş) — dk — 3 set × maks. asılı kal (hedef 20-30 sn)
 
 **Gün B — Göğüs / Omuz**
 1. Dumbbell Bench Press — kg — 4 set × 6-10 tekrar *(değişti: bkz. eşleştirme tablosu)*
@@ -160,6 +161,10 @@ hemen önce gösterilir):
    açıcı bacak sallama, omuz/skapula hareketleri. Bantlı ekipman yok;
    kablo istasyonunda çok hafif ağırlıkla face pull / pull-apart aynı işi
    görür.
+   - **Sadece Gün A ve Gün C'de** (Sürüm 6): ek olarak **Thoracic
+     Extension** (foam roller ya da bench üzerinde, 60 saniye) — bu iki
+     gün sırt/omuz ağırlıklı olduğundan torasik omurga mobilitesine
+     öncelik veriliyor. Gün B/D'de yok.
 3. **Günün ilk (en ağır bileşik) hareketine özel ramp-up setleri** —
    Barbell Deadlift, Dumbbell Bench Press ve Dumbbell Goblet Squat için
    çalışma ağırlığının yaklaşık %40 → %60 → %80'i ile azalan tekrarlarla
@@ -268,11 +273,21 @@ Romanian Deadlift, Walking Lunge, Barbell Curl, Triceps Pushdown, Plank.
 
 ## Faz / Hafta Hesabı
 
-- `hafta = ceil(tamamlanan_seans_sayısı / 4)` (henüz seans yoksa hafta 1).
-- Hafta ≤ 12 → Faz 1 (Recomp), Hafta ≥ 13 → Faz 2 (Lean Bulk).
+- `hafta = floor(tamamlanan_seans_sayısı / 4) + 1` (henüz seans yoksa hafta 1).
+- **Faz geçişi artık takvim haftasına değil, en son kaydedilen vücut yağı
+  yüzdesine bağlı** (Sürüm 6):
+  - Hafta ≥ 8 **VE** en son ölçülen vücut yağı ≤ %17 → Faz 2 (Lean Bulk).
+  - **Güvenlik sınırı:** hafta ≥ 16 olduğunda, vücut yağı hedefine
+    ulaşılmamış olsa bile otomatik olarak Faz 2'ye geçilir (çok uzun süre
+    kalori açığında kalmayı engellemek için).
+  - Bu ikisi sağlanmadıkça Faz 1 (Recomp) sürer.
+  - Eşikler `PHASE2_BODYFAT_THRESHOLD` (17), `PHASE2_MIN_WEEK` (8),
+    `PHASE2_SAFETY_WEEK` (16) olarak `index.html`'de sabit tanımlı.
 - Hafta 12'ye girildiğinde (ya da 12. hafta içindeyken) faz geçiş kontrolü
-  banner'ı gösterilir: kullanıcıyı vücut ölçümlerini güncellemeye ve Faz 2'ye
-  geçişi onaylamaya davet eder.
+  banner'ı gösterilir: kullanıcıyı vücut ölçümlerini güncellemeye davet
+  eder ve yeni eşikleri (vücut yağı %17 + hafta 8, en geç hafta 16'da
+  otomatik) açıklar. Bu banner'ın gösterildiği hafta (12) sabit kaldı;
+  değişen sadece faz geçişinin KENDİSİNİN hangi koşulla tetiklendiği.
 
 ## Tasarım
 

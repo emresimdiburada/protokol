@@ -292,6 +292,7 @@ var EXERCISES = {
     { id:'a_facepull',   name:'Face Pull',                         nameEn:'face pull cable exercise',    unit:'kg',     prescription:{ sets:3, target:'12-15 tekrar' } },
     { id:'a_dbrow',      name:'Tek Kol Dumbbell Row',              nameEn:'single arm dumbbell row',     unit:'kg_arm', prescription:{ sets:3, target:'12-15 tekrar' } },
     { id:'a_traprise',   name:'Prone Trap Raise (Duruş)',          nameEn:'prone trap raise',            unit:'kg',     prescription:{ sets:3, target:'15 tekrar' } },
+    { id:'a_chintuck',   name:'Chin Tuck (Boyun Retraksiyonu)',    nameEn:'chin tuck neck retraction exercise', unit:'dk', prescription:{ sets:2, target:'30 sn tutuş' } },
     { id:'a_deadhang',   name:'Dead Hang (Duruş)',                 nameEn:'dead hang exercise',          unit:'dk',     prescription:{ sets:3, target:'maks. asılı kal (hedef 20-30 sn)' } }
   ],
   B: [
@@ -333,6 +334,13 @@ var WARMUP_RAMPUP = {
   D: 'Dumbbell Goblet Squat için ısınma setleri: çalışma ağırlığının yaklaşık %40 → %60 → %80\'i ile azalan tekrarlarla (ör. 8-10-5), aralarda kısa dinlenme.'
 };
 
+// Sadece sırt/omuz ağırlıklı günlerde (A, C) ekstra torasik mobilite —
+// B/D'de yok.
+var WARMUP_EXTRA_MOBILITY = {
+  A: 'Thoracic Extension (foam roller ya da bench üzerinde, 60 saniye)',
+  C: 'Thoracic Extension (foam roller ya da bench üzerinde, 60 saniye)'
+};
+
 var QUICK_PROTEIN = [10, 20, 30, 50];
 
 var SUPPLEMENTS = [
@@ -346,6 +354,12 @@ var SUPPLEMENTS = [
 var BLOCK_LENGTH_DAYS = 168;
 var TOTAL_SESSIONS = 96;
 var DEFAULT_BLOCK_START = '2026-08-29';
+
+// Faz 2 (Lean Bulk) geçiş eşikleri: vücut yağı hedefine ulaşmak takvimden
+// önce gelir, ama açıkta çok uzun kalmamak için bir güvenlik sınırı var.
+var PHASE2_BODYFAT_THRESHOLD = 17;
+var PHASE2_MIN_WEEK = 8;
+var PHASE2_SAFETY_WEEK = 16;
 
 var MOTIVATION_QUOTES = [
   'Bugün attığın her adım, aynadaki o hedefe bir gün daha yaklaştırıyor.',
@@ -531,7 +545,12 @@ function getNextDateForDayType(dayType){
 function getCompletedCount(){ return state.sessions.length; }
 function getCurrentWeek(){ return Math.floor(getCompletedCount() / 4) + 1; }
 function getSessionsThisWeek(){ return getCompletedCount() % 4; }
-function getPhase(){ return getCurrentWeek() <= 12 ? 1 : 2; }
+function getPhase(){
+  var week = getCurrentWeek();
+  if (week >= PHASE2_SAFETY_WEEK) return 2; // güvenlik sınırı: hedefe ulaşılmasa bile geç
+  if (week >= PHASE2_MIN_WEEK && state.profile.bodyFatPct <= PHASE2_BODYFAT_THRESHOLD) return 2;
+  return 1;
+}
 function isPhaseCheckWeek(){ return getCurrentWeek() === 12; }
 
 function getPrevSessionForDay(dayType){
@@ -800,7 +819,9 @@ function renderToday(){
     html += '<div class="banner">' +
       '<b>🔔 Hafta 12 · Faz Geçiş Kontrolü</b>' +
       '<p>Recomp fazının sonuna yaklaştın. Vücut yağı, kilo ve fotoğraflarını güncelle. ' +
-      '13. haftadan itibaren otomatik olarak <b>Faz 2 – Lean Bulk</b> stratejisine geçilecek.' + measDiffText + '</p>' +
+      'Vücut yağı %' + PHASE2_BODYFAT_THRESHOLD + '\'nin altına indiğinde (hafta ' + PHASE2_MIN_WEEK + '\'den itibaren) otomatik olarak ' +
+      '<b>Faz 2 – Lean Bulk</b> stratejisine geçilecek; hedefe ulaşılmamış olsa bile en geç hafta ' + PHASE2_SAFETY_WEEK + '\'da otomatik geçiş yapılacak.' +
+      measDiffText + '</p>' +
       '</div>';
   }
 
@@ -812,7 +833,9 @@ function renderToday(){
   }
 
   var warmupFirstExName = EXERCISES[displayDayType][0].name;
-  var warmupLines = WARMUP_GENERAL_STEPS.concat([WARMUP_RAMPUP[displayDayType]]);
+  var warmupLines = WARMUP_GENERAL_STEPS.slice();
+  if (WARMUP_EXTRA_MOBILITY[displayDayType]) warmupLines.push(WARMUP_EXTRA_MOBILITY[displayDayType]);
+  warmupLines.push(WARMUP_RAMPUP[displayDayType]);
   html += '<div class="card card-accent-amber">' +
     '<div class="warmup-toggle" onclick="toggleWarmup()">' +
       '<div>' +
