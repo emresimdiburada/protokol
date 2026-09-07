@@ -121,7 +121,7 @@ kullanım için tasarlandı.
 1. Weighted Pull-Up — kg — 4 set × 6-10 tekrar
 2. Chest-Supported Dumbbell Row — kg — 3 set × 12-15 tekrar *(değişti: bkz. eşleştirme tablosu)*
 3. Cable Reverse Fly — kg — 3 set × 12-15 tekrar *(değişti: bkz. eşleştirme tablosu)*
-4. Cable Y-Raise (Alt Makara, Omuz Sağlığı) — kg — 3 set × 12-15 tekrar *(değişti: bkz. eşleştirme tablosu)*
+4. Band Pull-Apart (Omuz Sağlığı) — kg — 3 set × 12-15 tekrar *(Sürüm 10'da direnç bandı ile geri getirildi, bkz. eşleştirme tablosu)*
 5. Cable External Rotation (Omuz Sağlığı) — kg/kol — 3 set × 12-15 tekrar
 6. Farmer's Carry (Duruş/Core) — dk — 3 set × 40m ya da 45-60 sn
 
@@ -163,9 +163,9 @@ hemen önce gösterilir):
    eklem sıcaklığını yükseltmek için. Ekipman envanterindeki kondisyon
    aletleri (bkz. aşağıdaki bölüm) bu amaçla kullanılır.
 2. **2-3 dk dinamik mobilite** — kol çemberleri, gövde rotasyonu, kalça
-   açıcı bacak sallama, omuz/skapula hareketleri. Bantlı ekipman yok;
-   kablo istasyonunda çok hafif ağırlıkla face pull / pull-apart aynı işi
-   görür.
+   açıcı bacak sallama, direnç bandıyla omuz açma (band pull-apart /
+   shoulder dislocate, 10-15 tekrar) — Sürüm 10'da direnç bandının
+   doğrulanmasıyla eklendi.
    - **Sadece Gün A ve Gün C'de** (Sürüm 6): ek olarak **Thoracic
      Extension** (foam roller ya da bench üzerinde, 60 saniye) — bu iki
      gün sırt/omuz ağırlıklı olduğundan torasik omurga mobilitesine
@@ -199,6 +199,10 @@ ekipman tespit edilmiştir:
   bir **duvar/kapı montajlı pull-up bar**.
 - **Kondisyon aletleri** (eliptik x2, recumbent bike, koşu bandı) — programın
   kapsamı dışında, isteğe bağlı ısınma/kardiyo için kullanılabilir.
+- **Domyos Direnç Bandı (halka, 20 kg)** — Sürüm 10'da doğrulandı (Decathlon
+  ürünü, evde mevcut). Isınma mobilitesinde omuz açma ve Gün C'de Band
+  Pull-Apart için kullanılıyor; ayrıca pull-up bar ile birlikte assisted
+  pull-up için de kullanılabilir (henüz programa eklenmedi).
 
 Tespit edilmeyen ekipman: **squat rack / power rack (emniyet çubuklu)**,
 **leg press makinesi**, **T-bar row (landmine) aparatı**, **pec deck
@@ -212,7 +216,12 @@ değiştirilmiştir:
 | Leg Press | D | Leg press makinesi yok | **Dumbbell Bulgarian Split Squat** | Dambıllar + Delta bench (arka ayak yükseltme) |
 | T-Bar Row | C | Landmine / T-bar row aparatı yok | **Chest-Supported Dumbbell Row** | Dambıllar + eğimli Delta bench |
 | Reverse Pec Deck Fly | C | Pec deck makinesi yok | **Cable Reverse Fly** | Max Tech kablo istasyonu |
-| Band Pull-Apart | C | Direnç bandı fotoğraflarda net olarak tespit edilemedi | **Cable Y-Raise (Alt Makara)** | Max Tech kablo istasyonu |
+
+Sürüm 10'da geri alınan değişiklik (ekipman artık doğrulandı):
+
+| Orijinal Hareket | Gün | Önceki Durum | Güncel Durum |
+|---|---|---|---|
+| Band Pull-Apart | C | Direnç bandı fotoğraflarda net tespit edilemediği için Cable Y-Raise (Alt Makara) ile değiştirilmişti | Direnç bandı (Domyos, 20 kg halka) evde doğrulandı — **Band Pull-Apart** olarak geri getirildi |
 
 Değişmeyen hareketler (mevcut ekipmanla zaten birebir uyumlu, doğrulandı):
 Barbell Deadlift, Wide-Grip Lat Pulldown, Seated Cable Row, Face Pull,
@@ -539,6 +548,40 @@ ayrı bir veri yapısı eklenmedi, tek ölçüm geçmişi korundu:
   kısmi (kilo-only ya da yağ-only) kayıtlarla karışabileceğinden
   `null`-güvenli hale getirildi (eksik alan için fark hesaplanmıyor,
   gösterimde sadece dolu olan alan yazılıyor).
+
+## Sürüm 10 Ek Özellikleri — Direnç Bandı Doğrulandı
+
+Decathlon fotoğrafından **Domyos Direnç Bandı (halka, 20 kg)**'nın evde
+mevcut olduğu doğrulandı. Bu, Sürüm 1'de "fotoğraflarda net tespit
+edilemediği" için yapılan Band Pull-Apart → Cable Y-Raise değişikliğini
+geçersiz kılıyor (bkz. [Ekipman Envanteri ve Hareket
+Eşleştirmesi](#ekipman-envanteri-ve-hareket-eşleştirmesi)):
+
+- **Gün C, madde 4:** Cable Y-Raise (Alt Makara) → **Band Pull-Apart**
+  (`c_bandpullapart`, eski `c_cableyraise` id'sinin yerine geçti — geçmiş
+  kayıtlar eski id altında kalır, yeni hareketle karşılaştırılmaz).
+- **Isınma dinamik mobilite adımı** artık kablo istasyonu yerine bandı
+  kullanıyor: "direnç bandıyla omuz açma (band pull-apart / shoulder
+  dislocate, 10-15 tekrar)" (`WARMUP_GENERAL_STEPS[1]`).
+- Assisted pull-up (bandı pull-up bar'a geçirip diz/ayağı içine koyarak)
+  henüz programa eklenmedi — ileride Dead Hang / Ağırlıklı Pull-Up
+  zorluğunu ayarlamak için değerlendirilebilir.
+
+## Sürüm 11 Ek Özellikleri — Düşük Tavan/Bar Boşluğu Uyarıları
+
+Kullanıcı 191cm boyunda ve ev salonundaki pull-up bar/tavan boşluğu sınırlı
+— iki somut risk teyit edildi:
+
+- **Dead Hang'de ayaklar yere değiyor** — bar tam kol açıklığında ayakları
+  yerden kaldıracak kadar yüksek değil, bu da tam vücut ağırlığıyla asılı
+  kalma amacını bozuyor. `EXERCISE_CAUTIONS.a_deadhang` eklendi (her zaman
+  gösterilir, sadece ilk seferde değil): dizleri bükerek ayak bileklerini
+  arkada çaprazlama tavsiyesi.
+- **Ağırlıklı Pull-Up'ta üst noktada başın bara çarpma riski** —
+  `EXERCISE_CAUTIONS.c_pullup` mevcut "yeni hareket, forma odaklan"
+  metninden bu kalıcı fiziksel kısıtlamaya güncellendi ve `firstTimeOnly`
+  `false` yapıldı (bar/tavan boşluğu değişmeyeceğinden uyarı her seansta
+  kalıcı olarak gösterilmeli, sadece ilk log'da değil).
 
 ## Veri Modeli (localStorage, tek anahtar: `protokol_state`)
 

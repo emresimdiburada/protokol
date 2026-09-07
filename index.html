@@ -329,7 +329,7 @@ var EXERCISES = {
     { id:'c_pullup',     name:'Ağırlıklı Pull-Up',                 nameEn:'weighted pull up',            unit:'kg',     prescription:{ sets:4, target:'6-10 tekrar' } },
     { id:'c_csrow',      name:'Chest-Supported Dumbbell Row',      nameEn:'chest supported dumbbell row', unit:'kg',    prescription:{ sets:3, target:'12-15 tekrar' } },
     { id:'c_cablerevfly',name:'Cable Reverse Fly',                 nameEn:'cable reverse fly rear delt', unit:'kg',     prescription:{ sets:3, target:'12-15 tekrar' } },
-    { id:'c_cableyraise',name:'Cable Y-Raise (Alt Makara, Omuz Sağlığı)', nameEn:'cable y raise shoulder', unit:'kg',   prescription:{ sets:3, target:'12-15 tekrar' } },
+    { id:'c_bandpullapart',name:'Band Pull-Apart (Omuz Sağlığı)',  nameEn:'band pull apart exercise',    unit:'kg',     prescription:{ sets:3, target:'12-15 tekrar' } },
     { id:'c_extrot',     name:'Cable External Rotation (Omuz Sağlığı)', nameEn:'cable external rotation shoulder', unit:'kg_arm', prescription:{ sets:3, target:'12-15 tekrar' } },
     { id:'c_farmers',    name:"Farmer's Carry (Duruş/Core)",       nameEn:'farmers carry exercise',      unit:'dk',     prescription:{ sets:3, target:'40m ya da 45-60 sn' } }
   ],
@@ -346,7 +346,7 @@ var EXERCISES = {
 
 var WARMUP_GENERAL_STEPS = [
   '3-5 dk hafif kardiyo (eliptik, bisiklet ya da koşu bandı) — kas ve eklem sıcaklığını yükseltmek için',
-  '2-3 dk dinamik mobilite: kol çemberleri, gövde rotasyonu, kalça açıcı bacak sallama, omuz/skapula hareketleri (kablo istasyonunda çok hafif ağırlıkla face pull / pull-apart de olur)'
+  '2-3 dk dinamik mobilite: kol çemberleri, gövde rotasyonu, kalça açıcı bacak sallama, direnç bandıyla omuz açma (band pull-apart / shoulder dislocate, 10-15 tekrar)'
 ];
 
 var WARMUP_RAMPUP = {
@@ -428,8 +428,9 @@ function deloadSetCount(sets){ return Math.max(1, Math.round(sets * 0.65)); }
 // ağırlık artırılırken de geçerli kalır.
 var EXERCISE_CAUTIONS = {
   a_deadlift: { firstTimeOnly: true, text: 'Yeni bir hareketse hafif ağırlıkla forma odaklan, YouTube linkinden tekniği kontrol et.' },
-  c_pullup:   { firstTimeOnly: true, text: 'Yeni bir hareketse hafif ağırlıkla forma odaklan, YouTube linkinden tekniği kontrol et.' },
-  b_dip:      { firstTimeOnly: false, text: 'Ek ağırlık eklemeden önce 10+ temiz vücut ağırlığı dips yapabildiğinden emin ol.' }
+  c_pullup:   { firstTimeOnly: false, text: 'Tavan/bar boşluğu düşük — üst noktada başını bara çarpmamak için hareket aralığını kontrollü tut.' },
+  b_dip:      { firstTimeOnly: false, text: 'Ek ağırlık eklemeden önce 10+ temiz vücut ağırlığı dips yapabildiğinden emin ol.' },
+  a_deadhang: { firstTimeOnly: false, text: 'Bar yüksekliği sınırlı — dizleri bükerek ayak bileklerini arkada çaprazla, ayaklar yere değmesin.' }
 };
 
 // "Hızlı seans" / minimum-viable seans modu (bkz. program-degerlendirme.md,
