@@ -583,6 +583,27 @@ Kullanıcı 191cm boyunda ve ev salonundaki pull-up bar/tavan boşluğu sınırl
   `false` yapıldı (bar/tavan boşluğu değişmeyeceğinden uyarı her seansta
   kalıcı olarak gösterilmeli, sadece ilk log'da değil).
 
+## Sürüm 12 Ek Özellikleri — Antrenman Olmayan Günlerde Duruş Bant Rutini
+
+Kullanıcının duruş programın #1 önceliği olması ve direnç bandının artık
+evde doğrulanmış olması nedeniyle ([[Sürüm 10]]), antrenman olmayan
+günlerde opsiyonel, **kaydı tutulmayan** bir hatırlatma kartı eklendi:
+
+- `POSTURE_BAND_ROUTINE` — 3 hareketlik kısa liste (Band Pull-Apart, Band
+  Face Pull, Band Shoulder Dislocate), ~5 dk.
+- `renderPostureBandCard()` sadece `renderToday()` içinde `delta < 0`
+  iken (yani gerçek sıradaki seansın tarihi bugünden ileriyse — bugün
+  antrenman günü değilse) gösteriliyor. Antrenman günlerinde ya da
+  gecikmiş seans durumunda (`delta >= 0`) hiç render edilmiyor.
+- Mevcut "tekrarlanan statik içerik" paterniyle aynı: varsayılan kapalı,
+  özet + "Detaylar ▼" (`postureExpanded` state'i, `toggleWarmup`/
+  `toggleNutritionTiming` ile birebir aynı mekanizma).
+- Bilinçli olarak **state'e/localStorage'a hiçbir şey yazmıyor** — sadece
+  bir öneri, yapılıp yapılmadığı takip edilmiyor. Amaç düşük efortlu bir
+  hatırlatma olması; ayrı bir "işaretle/tamamlandı" akışı eklemek hem
+  kod karmaşıklığı hem "bir görev daha, unutulur" riski taşıdığından
+  bilinçli olarak dışarıda bırakıldı.
+
 ## Veri Modeli (localStorage, tek anahtar: `protokol_state`)
 
 ```json

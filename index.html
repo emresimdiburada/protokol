@@ -363,6 +363,14 @@ var WARMUP_EXTRA_MOBILITY = {
   C: 'Thoracic Extension (foam roller ya da bench üzerinde, 60 saniye)'
 };
 
+// Antrenman olmayan günlerde (bkz. renderPostureBandCard) önerilen, kaydı
+// tutulmayan kısa duruş rutini — direnç bandı ile, ~5 dk.
+var POSTURE_BAND_ROUTINE = [
+  { name: 'Band Pull-Apart',        nameEn: 'band pull apart',        target: '3 set × 15 tekrar' },
+  { name: 'Band Face Pull',         nameEn: 'band face pull',         target: '3 set × 15 tekrar' },
+  { name: 'Band Shoulder Dislocate',nameEn: 'band shoulder dislocate',target: '2 set × 10 tekrar' }
+];
+
 var QUICK_PROTEIN = [10, 20, 30, 50];
 
 var SUPPLEMENTS = [
@@ -804,12 +812,14 @@ var sessionCompleteUntil = 0;
 var lastCompletedDayType = null;
 var expressMode = false;
 var nutritionExpanded = false;
+var postureExpanded = false;
 function setTab(t){
   activeTab = t;
   selectedDayPreview = null;
   warmupExpanded = false;
   expressMode = false;
   nutritionExpanded = false;
+  postureExpanded = false;
   render();
   window.scrollTo(0,0);
 }
@@ -832,6 +842,11 @@ function toggleWarmup(){
 
 function toggleNutritionTiming(){
   nutritionExpanded = !nutritionExpanded;
+  render();
+}
+
+function togglePostureBand(){
+  postureExpanded = !postureExpanded;
   render();
 }
 
@@ -950,6 +965,33 @@ function renderNutritionTimingCard(){
   return html;
 }
 
+// Antrenman olmayan günlerde gösterilen, kaydı tutulmayan öneri kartı —
+// sadece hatırlatma, state'e yazılmıyor (bkz. protokol-tasarim skill:
+// tekrarlanan statik içerik → varsayılan kapalı, özet + genişlet).
+function renderPostureBandCard(){
+  var html = '<div class="card">' +
+    '<div class="warmup-toggle" onclick="togglePostureBand()">' +
+      '<div>' +
+        '<div class="card-title" style="margin-bottom:0;">🧍 Duruş için Bant Rutini (opsiyonel)</div>' +
+        (postureExpanded ? '' : '<div class="warmup-summary">Bugün antrenman günün değil — ~5 dk direnç bandıyla omuz/sırt açma</div>') +
+      '</div>' +
+      '<span class="warmup-chevron">' + (postureExpanded ? 'Gizle ▲' : 'Detaylar ▼') + '</span>' +
+    '</div>';
+
+  if (postureExpanded){
+    html += POSTURE_BAND_ROUTINE.map(function(ex){
+      return '<div class="warmup-step">' +
+        '<b>' + ex.name + '</b> — ' + ex.target +
+        ' <a class="yt-link" style="margin-left:6px;" href="' + ytLink(ex.nameEn) + '" target="_blank" rel="noopener">▶ YouTube</a>' +
+      '</div>';
+    }).join('');
+    html += '<div class="warmup-step small-muted">Bu rutin kaydedilmiyor, sadece hatırlatma — takvim antrenman günlerini etkilemez.</div>';
+  }
+
+  html += '</div>';
+  return html;
+}
+
 function renderToday(){
   var next = getNextSession();
   var today = todayISO();
@@ -1039,6 +1081,10 @@ function renderToday(){
   }
 
   html += renderNutritionTimingCard();
+
+  if (delta < 0){
+    html += renderPostureBandCard();
+  }
 
   var warmupFirstExName = EXERCISES[displayDayType][0].name;
   var warmupLines = WARMUP_GENERAL_STEPS.slice();
