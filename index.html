@@ -1168,7 +1168,12 @@ function renderToday(){
   });
 
   if (isActualNext){
-    html += '<button class="btn-primary" onclick="completeSession(\'' + displayDayType + '\')">Seansı Tamamla ✓</button>';
+    html += '<div class="field" style="margin-bottom:10px;">' +
+      '<label>Antrenman tarihi</label>' +
+      '<input type="date" id="sessionDateInput" value="' + todayISO() + '" max="' + todayISO() + '">' +
+      '<div class="small-muted" style="margin-top:4px;">Seansı tamamlamayı unuttuysan (ör. dün antrenman yaptın ama bugün kaydediyorsun) buradan gerçek tarihi seç.</div>' +
+    '</div>' +
+    '<button class="btn-primary" onclick="completeSession(\'' + displayDayType + '\')">Seansı Tamamla ✓</button>';
   } else {
     html += '<div class="preview-note">Bu senin sıradaki antrenman günün değil — önizleme modundasın. Sıradaki: Gün ' +
       next.dayType + ', ' + formatDateTR(next.dueDate) + '.</div>';
@@ -1226,6 +1231,10 @@ function completeSession(dayType){
     if (!confirm(earlyMsg)) return;
   }
 
+  var dateEl = document.getElementById('sessionDateInput');
+  var sessionDate = (dateEl && dateEl.value) ? dateEl.value : todayISO();
+  if (sessionDate > todayISO()) sessionDate = todayISO();
+
   var exList = EXERCISES[dayType];
   var exercises = {};
   exList.forEach(function(ex){
@@ -1238,7 +1247,7 @@ function completeSession(dayType){
     if (!confirm('Hiç egzersiz girmedin. Yine de seansı boş olarak tamamlamak istiyor musun?')) return;
   }
   exList.forEach(function(ex){ delete pendingExerciseValues[ex.id]; });
-  state.sessions.push({ date: todayISO(), dayType: dayType, exercises: exercises });
+  state.sessions.push({ date: sessionDate, dayType: dayType, exercises: exercises });
   selectedDayPreview = null;
   expressMode = false;
   lastCompletedDayType = dayType;

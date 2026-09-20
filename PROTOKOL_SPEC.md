@@ -604,6 +604,27 @@ günlerde opsiyonel, **kaydı tutulmayan** bir hatırlatma kartı eklendi:
   kod karmaşıklığı hem "bir görev daha, unutulur" riski taşıdığından
   bilinçli olarak dışarıda bırakıldı.
 
+## Sürüm 13 Ek Özellikleri — Geriye Dönük Seans Tamamlama
+
+Kullanıcı bir antrenmanı bitirip verileri girdikten sonra "Seansı
+Tamamla ✓" butonuna basmayı unutabiliyor; ertesi gün fark ettiğinde
+`completeSession()` her zaman **o anki** `todayISO()` tarihini
+kaydediyordu, yani antrenman aslında dün yapılmış olsa bile geçmişe
+bir gün sonrasının tarihiyle işleniyordu.
+
+- "Seansı Tamamla ✓" butonunun hemen üstüne **"Antrenman tarihi"**
+  başlıklı bir `<input type="date">` eklendi (varsayılan bugün, gelecek
+  tarih seçilemez — vücut ölçümü tarih alanıyla [[Sürüm 9]] aynı
+  `max="todayISO()"` deseni).
+- `completeSession()` artık kaydı bu seçili tarihle (`sessionDateInput`)
+  push ediyor, sabit `todayISO()` ile değil. Erken tamamlama uyarısı
+  (`delta < 0` kontrolü) hâlâ gerçek bugüne göre çalışıyor — bu, "takvimi
+  zorluyor musun" sorusu, geriye dönük tarih seçimiyle ilgisiz.
+- Sadece geleceğe dönük değil geçmişe dönük tarih girişini engellemek
+  için ek bir JS clamp'i de var (`sessionDate > todayISO()` ise
+  `todayISO()`'ya düşürülüyor) — `max` niteliği tarayıcı tarafında zaten
+  engelliyor ama DOM'dan okunan value manipüle edilirse diye savunma.
+
 ## Veri Modeli (localStorage, tek anahtar: `protokol_state`)
 
 ```json
