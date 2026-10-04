@@ -157,6 +157,15 @@ def page_session(base_url):
         errors = []
         page.on("console", lambda m: errors.append(f"console.error: {m.text}") if m.type == "error" else None)
         page.on("pageerror", lambda exc: errors.append(f"pageerror: {exc}"))
+        # Auto-accept confirm()/alert() dialogs -- Playwright's default is to
+        # auto-DISMISS them (confirm() resolves false), which silently short-
+        # circuits any `if (!confirm(...)) return;` guard in the app (e.g.
+        # completeSession()'s early-completion confirm added in Sürüm 13).
+        # Found via ux-walkthrough: step4 appeared to "complete" a session
+        # but completeSession() had actually returned early on a dismissed
+        # confirm, so no session was ever pushed -- every scripted flow here
+        # wants the "yes, proceed" path, not a real user's free choice.
+        page.on("dialog", lambda d: d.accept())
         page.goto(f"{base_url}/index.html", wait_until="networkidle")
         page.wait_for_selector("text=PROTOKOL", timeout=5000)
         try:
@@ -213,8 +222,13 @@ def build_simulated_state(day_info, exercises_by_day, block_start, fake_today, s
     rnd = random.Random(seed)
 
     def starting_value(unit):
-        if unit == "dk":
-            return 0.30
+        # "sn"/"reps" (Sürüm 14 -- previously "dk" for all duration
+        # exercises, dk/sn mismatch fixed) start at a realistic value for
+        # their own scale, not a weight-scale default.
+        if unit == "sn":
+            return 20.0
+        if unit == "reps":
+            return 12.0
         if unit == "kg_arm":
             return 10.0
         if unit == "kg_leg":
@@ -230,13 +244,13 @@ def build_simulated_state(day_info, exercises_by_day, block_start, fake_today, s
         occ = ex_occurrence.get(exid, 0)
         if exid not in ex_value:
             ex_value[exid] = starting_value(unit)
-        step = 0.05 if unit == "dk" else 2.5
+        step = 2.0 if unit == "sn" else (1.0 if unit == "reps" else 2.5)
         if occ > 0 and occ % 3 == 0:
             ex_value[exid] = round(ex_value[exid] + step, 2)
         elif occ > 0 and rnd.random() < 0.12:
             # occasional off day -- keeps the data non-monotonic/realistic
             # and exercises shouldShowProgressionHint's "did it drop" branch
-            dip = 0.02 if unit == "dk" else 1.25
+            dip = 1.0 if unit in ("sn", "reps") else 1.25
             ex_value[exid] = round(max(starting_value(unit), ex_value[exid] - dip), 2)
         ex_occurrence[exid] = occ + 1
         return round(ex_value[exid], 2)
@@ -478,6 +492,13 @@ def cmd_ux_walkthrough(args):
             context = browser.new_context(storage_state=str(SIM_STORAGE_STATE), **MOBILE_VIEWPORT)
             context.clock.set_fixed_time(fake_today + "T09:00:00")
             page = context.new_page()
+            # See page_session()'s dialog comment: Playwright auto-DISMISSES
+            # confirm() by default, which silently no-ops completeSession()'s
+            # early-completion guard (Sürüm 13) whenever the simulated fake
+            # "today" lands before the next session's due date -- step4 would
+            # otherwise look like it completed a session while actually
+            # pushing nothing.
+            page.on("dialog", lambda d: d.accept())
             page.goto(f"{base_url}/index.html", wait_until="networkidle")
             page.wait_for_selector("text=PROTOKOL")
 
@@ -501,10 +522,11 @@ def cmd_ux_walkthrough(args):
                     sel = f"#ex_input_{ex['id']}"
                     prev_raw = page.get_attribute(sel, "data-prev")
                     unit = ex["unit"]
+                    step = 2.0 if unit == "sn" else (1.0 if unit == "reps" else 2.5)
                     if prev_raw:
-                        val = round(float(prev_raw) + (0.05 if unit == "dk" else 2.5), 2)
+                        val = round(float(prev_raw) + step, 2)
                     else:
-                        val = 0.30 if unit == "dk" else 20.0
+                        val = 12.0 if unit == "reps" else 20.0
                     page.fill(sel, str(val))
                     filled.append(f"{ex['name']}={val}")
                 page.screenshot(path=str(path))
@@ -530,10 +552,17 @@ def cmd_ux_walkthrough(args):
                 page.wait_for_timeout(300)
                 page.screenshot(path=str(path))
                 new_next = page.evaluate("() => getNextSession()")
+                # ux-friction-report.md's original finding here ("no visible
+                # confirmation toast") was fixed since that report was written
+                # -- completeSession() now sets a `.banner.success` for ~2.5s
+                # (sessionCompleteUntil). Check it instead of asserting the
+                # old (now stale) finding as if it still held.
+                has_toast = page.locator(".banner.success").count() > 0
+                toast_desc = "GÖRÜNÜR ONAY/TOAST VAR (.banner.success)" if has_toast else "GÖRÜNÜR BİR ONAY/TOAST YOK"
                 return (
                     f"seans tamamlandı (ilk egzersiz input'u tamamlanmadan önce hâlâ '{values_still_present}' "
-                    f"değerini taşıyordu -- pendingExerciseValues fix'i doğrulandı); tamamlama sonrası GÖRÜNÜR "
-                    f"BİR ONAY/TOAST YOK, sayfa sessizce sıradaki güne geçti (yeni sıradaki: Gün {new_next['dayType']})"
+                    f"değerini taşıyordu -- pendingExerciseValues fix'i doğrulandı); tamamlama sonrası {toast_desc}, "
+                    f"sayfa sıradaki güne geçti (yeni sıradaki: Gün {new_next['dayType']})"
                 )
             _run_step(log, 4, "seansi-tamamla", step4)
 
