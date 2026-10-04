@@ -430,15 +430,33 @@ function isDeloadWeek(){ return DELOAD_WEEKS.indexOf(getCurrentWeek()) !== -1; }
 function deloadSetCount(sets){ return Math.max(1, Math.round(sets * 0.65)); }
 
 // Yüksek riskli / teknik açıdan hassas hareketler için uyarı metinleri
-// (bkz. program-degerlendirme.md, Doktor bölümü). firstTimeOnly: true olan
-// sadece o hareket için hiç kayıt yokken gösterilir; false olan (Ağırlıklı
-// Dips) her zaman gösterilir çünkü bodyweight-ustalık hatırlatması tekrar
-// ağırlık artırılırken de geçerli kalır.
+// (bkz. program-degerlendirme.md, Doktor bölümü). Her id bir uyarı dizisine
+// karşılık gelir (birden fazla uyarı aynı harekette gösterilebilir).
+// firstTimeOnly: true olan sadece o hareket için hiç kayıt yokken gösterilir;
+// false olan (ör. bodyweight-ustalık hatırlatmaları) her zaman gösterilir
+// çünkü o uyarı tekrar ağırlık artırılırken de geçerli kalır.
+//
+// Deadlift, Ağırlıklı Pull-Up ve Ağırlıklı Dips "yüksek riskli" olarak
+// işaretli üçlü (bkz. Doktor #1-3) — üçü de aynı genel "yeni hareketse
+// forma odaklan" uyarısını alır. Pull-Up ve Dips ayrıca, ağırlık eklemeden
+// önce vücut ağırlığıyla ustalaşma ön koşulunu hatırlatan kendi notlarını
+// da alır (Doktor #3 bu notu sadece Dips için önermişti, ama aynı "ağırlık
+// eklenen bodyweight hareketi" mantığı Pull-Up için de geçerli).
+var NEW_MOVEMENT_CAUTION = { firstTimeOnly: true, text: 'Yeni bir hareketse hafif ağırlıkla forma odaklan, YouTube linkinden tekniği kontrol et.' };
 var EXERCISE_CAUTIONS = {
-  a_deadlift: { firstTimeOnly: true, text: 'Yeni bir hareketse hafif ağırlıkla forma odaklan, YouTube linkinden tekniği kontrol et.' },
-  c_pullup:   { firstTimeOnly: false, text: 'Tavan/bar boşluğu düşük — üst noktada başını bara çarpmamak için hareket aralığını kontrollü tut.' },
-  b_dip:      { firstTimeOnly: false, text: 'Ek ağırlık eklemeden önce 10+ temiz vücut ağırlığı dips yapabildiğinden emin ol.' },
-  a_deadhang: { firstTimeOnly: false, text: 'Bar yüksekliği sınırlı — dizleri bükerek ayak bileklerini arkada çaprazla, ayaklar yere değmesin.' }
+  a_deadlift: [ NEW_MOVEMENT_CAUTION ],
+  c_pullup: [
+    NEW_MOVEMENT_CAUTION,
+    { firstTimeOnly: false, text: 'Vücut ağırlığınla 6-10 temiz tekrar pull-up yapamıyorsan ağırlık ekleme — önce lat pulldown, band-assisted pull-up ya da negative (eksantrik) pull-up ile temel gücü kazan.' },
+    { firstTimeOnly: false, text: 'Tavan/bar boşluğu düşük — üst noktada başını bara çarpmamak için hareket aralığını kontrollü tut.' }
+  ],
+  b_dip: [
+    NEW_MOVEMENT_CAUTION,
+    { firstTimeOnly: false, text: 'Ek ağırlık eklemeden önce 10+ temiz vücut ağırlığı dips yapabildiğinden emin ol — yapamıyorsan bench dips ya da assisted dip makinesiyle güç kazan.' }
+  ],
+  a_deadhang: [
+    { firstTimeOnly: false, text: 'Bar yüksekliği sınırlı — dizleri bükerek ayak bileklerini arkada çaprazla, ayaklar yere değmesin.' }
+  ]
 };
 
 // "Hızlı seans" / minimum-viable seans modu (bkz. program-degerlendirme.md,
@@ -1132,10 +1150,12 @@ function renderToday(){
       hintHtml = '<div class="hint-badge">' + hintText + '</div>';
     }
     var cautionHtml = '';
-    var caution = EXERCISE_CAUTIONS[ex.id];
-    if (caution && (!caution.firstTimeOnly || prevVal === null)){
-      cautionHtml = '<div class="caution-badge">⚠️ ' + caution.text + '</div>';
-    }
+    var cautions = EXERCISE_CAUTIONS[ex.id] || [];
+    cautions.forEach(function(caution){
+      if (!caution.firstTimeOnly || prevVal === null){
+        cautionHtml += '<div class="caution-badge">⚠️ ' + caution.text + '</div>';
+      }
+    });
     var displaySets = isDeloadWeek() ? deloadSetCount(ex.prescription.sets) : ex.prescription.sets;
     var deloadNote = isDeloadWeek() ? ' (hafif hafta)' : '';
     var pendingVal = pendingExerciseValues[ex.id] !== undefined ? pendingExerciseValues[ex.id] : '';
