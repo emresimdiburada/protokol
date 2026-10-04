@@ -308,39 +308,39 @@ var DAY_INFO = {
 
 var EXERCISES = {
   A: [
-    { id:'a_deadlift',   name:'Barbell Deadlift',                 nameEn:'barbell deadlift',            unit:'kg',     prescription:{ sets:4, target:'6-10 tekrar' } },
+    { id:'a_deadlift',   name:'Barbell Deadlift',                 nameEn:'barbell deadlift',            unit:'kg',     prescription:{ sets:4, target:'6-10 tekrar' }, express:true },
     { id:'a_latpull',    name:'Lat Pulldown (Geniş Tutuş)',        nameEn:'wide grip lat pulldown',      unit:'kg',     prescription:{ sets:3, target:'12-15 tekrar' } },
     { id:'a_cablerow',   name:'Seated Cable Row',                  nameEn:'seated cable row',            unit:'kg',     prescription:{ sets:3, target:'12-15 tekrar' } },
     { id:'a_facepull',   name:'Face Pull',                         nameEn:'face pull cable exercise',    unit:'kg',     prescription:{ sets:3, target:'12-15 tekrar' } },
     { id:'a_dbrow',      name:'Tek Kol Dumbbell Row',              nameEn:'single arm dumbbell row',     unit:'kg_arm', prescription:{ sets:3, target:'12-15 tekrar' } },
-    { id:'a_traprise',   name:'Prone Trap Raise (Duruş)',          nameEn:'prone trap raise',            unit:'kg',     prescription:{ sets:3, target:'15 tekrar' } },
-    { id:'a_chintuck',   name:'Chin Tuck (Boyun Retraksiyonu)',    nameEn:'chin tuck neck retraction exercise', unit:'dk', prescription:{ sets:2, target:'30 sn tutuş' } },
-    { id:'a_deadhang',   name:'Dead Hang (Duruş)',                 nameEn:'dead hang exercise',          unit:'dk',     prescription:{ sets:3, target:'maks. asılı kal (hedef 20-30 sn)' } }
+    { id:'a_traprise',   name:'Prone Trap Raise (Duruş)',          nameEn:'prone trap raise',            unit:'kg',     prescription:{ sets:3, target:'15 tekrar' }, express:true },
+    { id:'a_chintuck',   name:'Chin Tuck (Boyun Retraksiyonu)',    nameEn:'chin tuck neck retraction exercise', unit:'sn', prescription:{ sets:2, target:'30 sn tutuş' } },
+    { id:'a_deadhang',   name:'Dead Hang (Duruş)',                 nameEn:'dead hang exercise',          unit:'sn',     prescription:{ sets:3, target:'maks. asılı kal (hedef 20-30 sn)' }, express:true }
   ],
   B: [
-    { id:'b_dbbench',    name:'Dumbbell Bench Press',              nameEn:'dumbbell bench press',        unit:'kg',     prescription:{ sets:4, target:'6-10 tekrar' } },
-    { id:'b_incline',    name:'Incline Dumbbell Press',            nameEn:'incline dumbbell press',      unit:'kg',     prescription:{ sets:4, target:'6-10 tekrar' } },
-    { id:'b_flye',       name:'Cable Chest Fly',                   nameEn:'cable chest fly',             unit:'kg',     prescription:{ sets:3, target:'12-15 tekrar' } },
+    { id:'b_dbbench',    name:'Dumbbell Bench Press',              nameEn:'dumbbell bench press',        unit:'kg',     prescription:{ sets:4, target:'6-10 tekrar' }, express:true },
+    { id:'b_incline',    name:'Incline Dumbbell Press',            nameEn:'incline dumbbell press',      unit:'kg',     prescription:{ sets:4, target:'6-10 tekrar' }, express:true },
+    { id:'b_flye',       name:'Cable Chest Fly',                   nameEn:'cable chest fly',             unit:'kg',     prescription:{ sets:3, target:'12-15 tekrar' }, express:true },
     { id:'b_shoulder',   name:'Seated Dumbbell Shoulder Press',    nameEn:'seated dumbbell shoulder press', unit:'kg',  prescription:{ sets:3, target:'12-15 tekrar' } },
     { id:'b_lateral',    name:'Lateral Raise',                     nameEn:'dumbbell lateral raise',      unit:'kg',     prescription:{ sets:3, target:'12-15 tekrar' } },
     { id:'b_dip',        name:'Ağırlıklı Dips',                    nameEn:'weighted dips chest',         unit:'kg',     prescription:{ sets:4, target:'6-10 tekrar' } }
   ],
   C: [
-    { id:'c_pullup',     name:'Ağırlıklı Pull-Up',                 nameEn:'weighted pull up',            unit:'kg',     prescription:{ sets:4, target:'6-10 tekrar' } },
+    { id:'c_pullup',     name:'Ağırlıklı Pull-Up',                 nameEn:'weighted pull up',            unit:'kg',     prescription:{ sets:4, target:'6-10 tekrar' }, express:true },
     { id:'c_csrow',      name:'Chest-Supported Dumbbell Row',      nameEn:'chest supported dumbbell row', unit:'kg',    prescription:{ sets:3, target:'12-15 tekrar' } },
     { id:'c_cablerevfly',name:'Cable Reverse Fly',                 nameEn:'cable reverse fly rear delt', unit:'kg',     prescription:{ sets:3, target:'12-15 tekrar' } },
-    { id:'c_bandpullapart',name:'Band Pull-Apart (Omuz Sağlığı)',  nameEn:'band pull apart exercise',    unit:'kg',     prescription:{ sets:3, target:'12-15 tekrar' } },
-    { id:'c_extrot',     name:'Cable External Rotation (Omuz Sağlığı)', nameEn:'cable external rotation shoulder', unit:'kg_arm', prescription:{ sets:3, target:'12-15 tekrar' } },
-    { id:'c_farmers',    name:"Farmer's Carry (Duruş/Core)",       nameEn:'farmers carry exercise',      unit:'dk',     prescription:{ sets:3, target:'40m ya da 45-60 sn' } }
+    { id:'c_bandpullapart',name:'Band Pull-Apart (Omuz Sağlığı)',  nameEn:'band pull apart exercise',    unit:'reps',   prescription:{ sets:3, target:'12-15 tekrar' }, express:true },
+    { id:'c_extrot',     name:'Cable External Rotation (Omuz Sağlığı)', nameEn:'cable external rotation shoulder', unit:'kg_arm', prescription:{ sets:3, target:'12-15 tekrar' }, express:true },
+    { id:'c_farmers',    name:"Farmer's Carry (Duruş/Core)",       nameEn:'farmers carry exercise',      unit:'sn',     prescription:{ sets:3, target:'40m ya da 45-60 sn' } }
   ],
   D: [
-    { id:'d_goblet',     name:'Dumbbell Goblet Squat',             nameEn:'dumbbell goblet squat',       unit:'kg',     prescription:{ sets:4, target:'6-10 tekrar' } },
-    { id:'d_rdl',        name:'Romanian Deadlift',                 nameEn:'romanian deadlift',           unit:'kg',     prescription:{ sets:4, target:'6-10 tekrar' } },
-    { id:'d_bulgarian',  name:'Dumbbell Bulgarian Split Squat',    nameEn:'dumbbell bulgarian split squat', unit:'kg_leg', prescription:{ sets:4, target:'6-10 tekrar/bacak' } },
+    { id:'d_goblet',     name:'Dumbbell Goblet Squat',             nameEn:'dumbbell goblet squat',       unit:'kg',     prescription:{ sets:4, target:'6-10 tekrar' }, express:true },
+    { id:'d_rdl',        name:'Romanian Deadlift',                 nameEn:'romanian deadlift',           unit:'kg',     prescription:{ sets:4, target:'6-10 tekrar' }, express:true },
+    { id:'d_bulgarian',  name:'Dumbbell Bulgarian Split Squat',    nameEn:'dumbbell bulgarian split squat', unit:'kg_leg', prescription:{ sets:4, target:'6-10 tekrar/bacak' }, express:true },
     { id:'d_lunge',      name:'Walking Lunge',                     nameEn:'walking lunge dumbbell',      unit:'kg_leg', prescription:{ sets:3, target:'12-15 tekrar/bacak' } },
     { id:'d_curl',       name:'Barbell Curl',                      nameEn:'barbell curl',                unit:'kg',     prescription:{ sets:4, target:'6-10 tekrar' } },
     { id:'d_pushdown',   name:'Triceps Pushdown',                  nameEn:'triceps pushdown cable',      unit:'kg',     prescription:{ sets:3, target:'12-15 tekrar' } },
-    { id:'d_plank',      name:'Plank (Core)',                      nameEn:'plank exercise',              unit:'dk',     prescription:{ sets:3, target:'45-60 sn' } }
+    { id:'d_plank',      name:'Plank (Core)',                      nameEn:'plank exercise',              unit:'sn',     prescription:{ sets:3, target:'45-60 sn' } }
   ]
 };
 
@@ -461,9 +461,20 @@ var EXERCISE_CAUTIONS = {
 
 // "Hızlı seans" / minimum-viable seans modu (bkz. program-degerlendirme.md,
 // Yaşam Koçu #3) — yoğun bir günde sadece en öncelikli birkaç hareketi
-// göster; egzersiz listeleri zaten önceliğe göre sıralı olduğundan bu
-// sadece exList'i kısaltmak demek, completeSession() zaten sadece dolu
-// input'ları kaydediyor.
+// göster. Önceden "ilk N hareketi tut" (array sırası = öncelik) mantığıyla
+// çalışıyordu, ama Gün A/C'de array sırası antrenman akışına göre (ağır
+// bileşik hareket önce, düzeltici/postür hareketleri sonra) dizili —
+// bu da Hızlı Seans'ta Gün C'nin "(Omuz Sağlığı)" etiketli TÜM
+// hareketlerinin ve Gün A'nın "(Duruş)" etiketli hareketlerinin kesilmesi
+// anlamına geliyordu; tam da kullanıcının #1 önceliği olan postür, zaman
+// kısıtlı bir günde devre dışı kalıyordu. Artık her EXERCISES girdisinde
+// açık bir `express:true` bayrağı var — her gün için hangi 3 hareketin
+// Hızlı Seans'ta kalacağı ayrı ayrı seçildi (Gün A/C'de bileşik hareket +
+// postür/omuz-sağlığı hareketleri bilinçli olarak tutuldu), array sırası
+// (antrenman akışı) değişmedi. completeSession() zaten sadece dolu
+// input'ları kaydediyor. EXPRESS_EXERCISE_COUNT sadece buton metninde
+// ("sadece 3 öncelikli hareket") gösterilen sayı — her günde tam 3 tane
+// express:true hareketi var.
 var EXPRESS_EXERCISE_COUNT = 3;
 
 var MOTIVATION_QUOTES = [
@@ -714,7 +725,8 @@ function unitLabel(u){
   if (u === 'kg') return 'kg';
   if (u === 'kg_arm') return 'kg/kol';
   if (u === 'kg_leg') return 'kg/bacak';
-  if (u === 'dk') return 'dk';
+  if (u === 'sn') return 'sn';
+  if (u === 'reps') return 'tekrar';
   return '';
 }
 
@@ -1128,7 +1140,7 @@ function renderToday(){
   }
 
   var fullExList = EXERCISES[displayDayType];
-  var exList = expressMode ? fullExList.slice(0, EXPRESS_EXERCISE_COUNT) : fullExList;
+  var exList = expressMode ? fullExList.filter(function(ex){ return ex.express; }) : fullExList;
   if (expressMode){
     html += '<div class="express-note">⚡ Hızlı seans modu — sadece en öncelikli ' + exList.length + '/' + fullExList.length +
       ' hareket gösteriliyor. <button class="express-toggle" onclick="toggleExpressMode()">Tam seansa dön</button></div>';
@@ -1144,8 +1156,10 @@ function renderToday(){
     }
     var hintHtml = '';
     if (shouldShowProgressionHint(displayDayType, ex.id)){
-      var hintText = ex.unit === 'dk'
+      var hintText = ex.unit === 'sn'
         ? '💡 İlerleme zamanı — bu sefer biraz daha uzun süre dene'
+        : ex.unit === 'reps'
+        ? '💡 İlerleme zamanı — bu sefer bir tekrar daha dene'
         : '💡 İlerleme zamanı — bu sefer biraz daha ağırlık dene';
       hintHtml = '<div class="hint-badge">' + hintText + '</div>';
     }
@@ -1180,7 +1194,7 @@ function renderToday(){
         '<a class="yt-link" href="' + ytLink(ex.nameEn) + '" target="_blank" rel="noopener">▶ YouTube</a>' +
       '</div>' +
       '<div class="ex-input-row">' +
-        '<input type="number" inputmode="decimal" step="0.5" min="0" placeholder="' + unitLabel(ex.unit) + '" ' +
+        '<input type="number" inputmode="decimal" step="' + ((ex.unit === 'sn' || ex.unit === 'reps') ? '1' : '0.5') + '" min="0" placeholder="' + unitLabel(ex.unit) + '" ' +
           'id="ex_input_' + ex.id + '" data-exid="' + ex.id + '" data-prev="' + (prevVal !== null ? prevVal : '') + '" value="' + pendingVal + '">' +
         '<span class="' + diffClass + '" id="ex_diff_' + ex.id + '">' + diffHtml + '</span>' +
       '</div>' +

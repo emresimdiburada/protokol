@@ -106,8 +106,8 @@ kullanım için tasarlandı.
 4. Face Pull — kg — 3 set × 12-15 tekrar
 5. Single-Arm Dumbbell Row — kg/kol — 3 set × 12-15 tekrar
 6. Prone Trap Raise (Duruş) — kg — 3 set × 15 tekrar
-7. Chin Tuck (Boyun Retraksiyonu) — dk — 2 set × 30 sn tutuş *(Sürüm 6'da eklendi, Dead Hang'den hemen önce)*
-8. Dead Hang (Duruş) — dk — 3 set × maks. asılı kal (hedef 20-30 sn)
+7. Chin Tuck (Boyun Retraksiyonu) — sn — 2 set × 30 sn tutuş *(Sürüm 6'da eklendi, Dead Hang'den hemen önce)*
+8. Dead Hang (Duruş) — sn — 3 set × maks. asılı kal (hedef 20-30 sn)
 
 **Gün B — Göğüs / Omuz**
 1. Dumbbell Bench Press — kg — 4 set × 6-10 tekrar *(değişti: bkz. eşleştirme tablosu)*
@@ -121,9 +121,9 @@ kullanım için tasarlandı.
 1. Weighted Pull-Up — kg — 4 set × 6-10 tekrar
 2. Chest-Supported Dumbbell Row — kg — 3 set × 12-15 tekrar *(değişti: bkz. eşleştirme tablosu)*
 3. Cable Reverse Fly — kg — 3 set × 12-15 tekrar *(değişti: bkz. eşleştirme tablosu)*
-4. Band Pull-Apart (Omuz Sağlığı) — kg — 3 set × 12-15 tekrar *(Sürüm 10'da direnç bandı ile geri getirildi, bkz. eşleştirme tablosu)*
+4. Band Pull-Apart (Omuz Sağlığı) — tekrar — 3 set × 12-15 tekrar *(Sürüm 10'da direnç bandı ile geri getirildi, bkz. eşleştirme tablosu; Sürüm 14'te "kg" yerine tamamlanan tekrar sayısı izlenecek şekilde değişti, bkz. [[Sürüm 14]])*
 5. Cable External Rotation (Omuz Sağlığı) — kg/kol — 3 set × 12-15 tekrar
-6. Farmer's Carry (Duruş/Core) — dk — 3 set × 40m ya da 45-60 sn
+6. Farmer's Carry (Duruş/Core) — sn — 3 set × 40m ya da 45-60 sn
 
 **Gün D — Bacak / Kol / Core**
 1. Dumbbell Goblet Squat — kg — 4 set × 6-10 tekrar *(değişti: bkz. eşleştirme tablosu)*
@@ -132,7 +132,7 @@ kullanım için tasarlandı.
 4. Walking Lunge — kg/bacak — 3 set × 12-15 tekrar/bacak
 5. Barbell Curl — kg — 4 set × 6-10 tekrar
 6. Triceps Pushdown — kg — 3 set × 12-15 tekrar
-7. Plank (Core) — dk — 3 set × 45-60 sn
+7. Plank (Core) — sn — 3 set × 45-60 sn
 
 ### Bilimsel Dayanak (Set / Tekrar Şeması)
 
@@ -624,6 +624,62 @@ bir gün sonrasının tarihiyle işleniyordu.
   için ek bir JS clamp'i de var (`sessionDate > todayISO()` ise
   `todayISO()`'ya düşürülüyor) — `max` niteliği tarayıcı tarafında zaten
   engelliyor ama DOM'dan okunan value manipüle edilirse diye savunma.
+
+## Sürüm 14 Ek Özellikleri — Tutarlılık Taraması (Hızlı Seans, Birim, Uyarılar)
+
+Kullanıcının "ağırlıklı pull-up yapamıyorum" geri bildirimi üzerine tüm
+programın baştan sona tekrar gözden geçirilmesiyle bulunan, birbirine
+benzer üç tutarsızlık düzeltildi:
+
+- **`EXERCISE_CAUTIONS.c_pullup`'a eksik olan bodyweight-ustalık uyarısı
+  eklendi.** Ağırlıklı Dips zaten "ek ağırlık eklemeden önce vücut
+  ağırlığıyla ustalaş" uyarısı alıyordu (bkz. [[Sürüm 7]], Doktor #3),
+  ama aynı mantık (ağırlık eklenen bodyweight hareketi) Ağırlıklı Pull-Up
+  için hiç uygulanmamıştı — Pull-Up sadece tavan boşluğu uyarısını
+  taşıyordu. `EXERCISE_CAUTIONS` artık her id için tek bir uyarı yerine
+  bir **uyarı dizisi** tutuyor (`.caution-badge` birden fazla kez alt
+  alta render edilebiliyor); Pull-Up ve Dips artık ikisi de genel
+  "yeni hareketse forma odaklan" uyarısını da alıyor (önceden sadece
+  Deadlift'te vardı, oysa Doktor bölümü üçünü de "yüksek riskli" olarak
+  işaretlemişti).
+- **Hızlı Seans artık her gün için açıkça seçilmiş bir hareket listesi
+  kullanıyor, "ilk N hareketi tut" değil.** Önceki mantık
+  (`fullExList.slice(0, EXPRESS_EXERCISE_COUNT)`) array sırasının
+  öncelik sırası olduğunu varsayıyordu, ama Gün A/C'de array sırası
+  antrenman akışına göre dizili (ağır bileşik hareket önce, düzeltici/
+  postür hareketleri sonra) — bu da Hızlı Seans'ta Gün C'nin **"(Omuz
+  Sağlığı)" etiketli hareketlerinin tamamının** ve Gün A'nın "(Duruş)"
+  etiketli hareketlerinin kesilmesi anlamına geliyordu; kullanıcının
+  kendi #1 önceliği (postür) tam da zaman kısıtlı bir günde devre dışı
+  kalıyordu. Her `EXERCISES` girdisine açık bir `express:true` bayrağı
+  eklendi; Gün A/C'de bileşik hareket + 2 postür/omuz-sağlığı hareketi
+  bilinçli olarak seçildi (Gün A: Deadlift, Prone Trap Raise, Dead Hang;
+  Gün C: Ağırlıklı Pull-Up, Band Pull-Apart, Cable External Rotation),
+  Gün B/D'de önceki davranış (ilk 3 hareket) korundu. Array sırası
+  (antrenman akışı) değişmedi, sadece Hızlı Seans'ın hangi 3'ü
+  göstereceği ayrıştırıldı.
+- **Band Pull-Apart artık "kg" yerine tamamlanan tekrar sayısını
+  izliyor.** Evde doğrulanan tek bir sabit dirençli bant var (bkz.
+  [[Sürüm 10]], Domyos 20kg halka, değişken direnç yok), yani "kg" giriş
+  alanının session'dan session'a anlamlı bir şekilde artması mümkün
+  değildi. `c_bandpullapart.unit` artık `'reps'` (`unitLabel` → "tekrar";
+  ilerleme ipucu artık "bir tekrar daha dene" diyor, ağırlık değil).
+- **Süre bazlı hareketlerin birimi `'dk'`den `'sn'`ye değişti** (Chin
+  Tuck, Dead Hang, Farmer's Carry, Plank) — bu dört hareketin hepsinin
+  reçete metni zaten saniye cinsindendi ("45-60 sn" gibi), ama giriş
+  alanı dakika bekliyordu; her kayıtta saniyeyi ondalık dakikaya çevirmek
+  gerekiyordu (45 sn → 0.75). Artık girilen sayı doğrudan saniye;
+  giriş adımı (`step`) da bu iki birim için `0.5` yerine `1`e düşürüldü
+  (kesirli saniye/tekrar anlamsız).
+
+Bu üçü de aynı kökten geliyor: `program-degerlendirme.md`'nin önerdiği bir
+düzeltme sadece BİR harekete/duruma uygulanmış, aynı mantığın geçerli
+olduğu diğer hareketler atlanmış. Geriye dönük uyumluluk notu: mevcut
+`protokol_state` kayıtlarındaki eski `c_bandpullapart` (kg) ve süre
+hareketi (dakika) değerleri olduğu gibi `sessions` içinde kalır —
+sadece birim etiketi ve yeni girilecek değerler değişti, geçmiş sayılar
+yeniden yorumlanmaz (ör. eski bir Dead Hang kaydı "0.5" ise bu hâlâ
+"0.5 dk" anlamında geçmişte kalır, yeni kayıtlar "sn" cinsinden).
 
 ## Veri Modeli (localStorage, tek anahtar: `protokol_state`)
 
