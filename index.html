@@ -1201,16 +1201,20 @@ function renderToday(){
     '</div>';
   });
 
-  if (isActualNext){
-    html += '<div class="field" style="margin-bottom:10px;">' +
+  var dateField = '<div class="field" style="margin-bottom:10px;">' +
       '<label>Antrenman tarihi</label>' +
       '<input type="date" id="sessionDateInput" value="' + todayISO() + '" max="' + todayISO() + '">' +
       '<div class="small-muted" style="margin-top:4px;">Seansı tamamlamayı unuttuysan (ör. dün antrenman yaptın ama bugün kaydediyorsun) buradan gerçek tarihi seç.</div>' +
-    '</div>' +
+    '</div>';
+  if (isActualNext){
+    html += dateField +
     '<button class="btn-primary" onclick="completeSession(\'' + displayDayType + '\')">Seansı Tamamla ✓</button>';
   } else {
     html += '<div class="preview-note">Bu senin sıradaki antrenman günün değil — önizleme modundasın. Sıradaki: Gün ' +
-      next.dayType + ', ' + formatDateTR(next.dueDate) + '.</div>';
+      next.dayType + ', ' + formatDateTR(next.dueDate) + '.</div>' +
+      dateField +
+      '<button class="btn-primary" onclick="completeSession(\'' + displayDayType + '\', true)">Yine de Gün ' + displayDayType + ' olarak kaydet ✓</button>' +
+      '<div class="small-muted" style="margin-top:4px;">Sıra bu günden sonraki güne geçer (Gün ' + DAY_INFO[displayDayType].next + ').</div>';
   }
   html += '</div>';
 
@@ -1253,11 +1257,14 @@ function attachExerciseInputListeners(){
   });
 }
 
-function completeSession(dayType){
+function completeSession(dayType, forceOutOfOrder){
   var next = getNextSession();
-  if (dayType !== next.dayType) return;
+  if (dayType !== next.dayType && !forceOutOfOrder) return;
+  if (dayType !== next.dayType &&
+      !confirm('Sıradaki gün ' + next.dayType + ' idi, ama Gün ' + dayType + ' olarak kaydediyorsun. Sıra Gün ' +
+        DAY_INFO[dayType].next + ' ile devam edecek. Onaylıyor musun?')) return;
 
-  var delta = daysBetween(next.dueDate, todayISO());
+  var delta = dayType === next.dayType ? daysBetween(next.dueDate, todayISO()) : 0;
   if (delta < 0){
     var earlyMsg = 'Bu antrenman henüz sırası gelmedi — planlanan tarih ' + formatDateTR(next.dueDate) +
       ' (' + Math.abs(delta) + ' gün sonra). Şimdi tamamlarsan kayan takvimdeki SIRADAKİ TÜM tarihler ' +
