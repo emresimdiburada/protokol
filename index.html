@@ -1600,6 +1600,9 @@ function renderSettings(){
   html += '<div class="card">' +
     '<div class="card-title">📊 Program</div>' +
     '<div class="card-sub" style="margin-bottom:0;">Blok: ' + formatDateTR(state.blockStart) + ' – ' + formatDateTR(state.blockEnd) + '<br>Tamamlanan seans: ' + getCompletedCount() + ' · Hafta ' + getCurrentWeek() + '/24 · Faz ' + getPhase() + lockedNote + '</div>' +
+    (state.sessions.length > 0
+      ? '<button class="btn-secondary" style="width:100%; margin-top:10px;" onclick="startNewBlock()">🔄 Yeni blok başlat (seansları sıfırla)</button>'
+      : '') +
   '</div>';
 
   html += '<div class="card card-danger-zone">' +
@@ -1686,6 +1689,22 @@ function restoreBackup(fileInput){
     alert('Yedek başarıyla geri yüklendi.');
   };
   reader.readAsText(file);
+}
+
+function startNewBlock(){
+  if (!confirm('Tüm seans geçmişi silinip Gün A / Hafta 1\'den yeniden başlanacak. Ölçümler, profil ve ayarlar korunur. Onaylıyor musun?')) return;
+  if (!confirm('Bu işlem geri alınamaz (önce Ayarlar\'dan yedek almanı öneririm). Yine de devam edilsin mi?')) return;
+  state.sessions = [];
+  state.blockStart = todayISO();
+  state.blockEnd = addDays(state.blockStart, BLOCK_LENGTH_DAYS);
+  selectedDayPreview = null;
+  pendingExerciseValues = {};
+  sessionCompleteUntil = 0;
+  expressMode = false;
+  activeTab = 'today';
+  saveState();
+  render();
+  window.scrollTo(0, 0);
 }
 
 function resetAllData(){
